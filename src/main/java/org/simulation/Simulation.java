@@ -38,9 +38,9 @@ public class Simulation {
 
     }
 
-    public static void main(String[] args) {
-        WorldMap worldMap = new WorldMap();
-        Renderer renderer = new Renderer(20);
+    public static void main(String[] args) throws InterruptedException {
+        WorldMap worldMap = new WorldMap(20, 20);
+        Renderer renderer = new Renderer(worldMap, 30);
 
         List<InitAction> initActions = List.of(new InitGrass(), new InitObstacles(), new InitCreatures());
         List<TurnAction> turnActions  = List.of(new MoveCreatures(), new CleanDeadAction(), new GrowGrass());
@@ -50,11 +50,12 @@ public class Simulation {
         simulation.startSimulation();
         renderer.render(worldMap);
 
-/*        boolean running = true;
+        boolean running = true;
         while (running) {
+            Thread.sleep(500);
             simulation.nextTurn();
             renderer.render(worldMap);
             running = false;
-        }*/
+        }
     }
 }

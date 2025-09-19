@@ -1,8 +1,25 @@
 package org.entity;
 
+import java.util.Random;
+
 public class Predator extends Creature {
 
-    private int attackStrength;
+    private static final int MIN_SPEED = 1;
+    private static final int MAX_SPEED = 4;
+    private static final int MIN_HP = 15;
+    private static final int MAX_HP = 25;
+    private static final int MIN_ATTACK = 5;
+    private static final int MAX_ATTACK = 15;
+
+    private final int attackStrength;
+
+    public Predator(Random random) {
+        super(
+                random.nextInt(MAX_SPEED - MIN_SPEED + 1) + MIN_SPEED,
+                random.nextInt(MAX_HP - MIN_HP + 1) + MIN_HP
+        );
+        this.attackStrength = random.nextInt(MAX_ATTACK - MIN_ATTACK + 1) + MIN_ATTACK;
+    }
 
     public Predator(int speed, int hp, int attackStrength) {
         super(speed, hp);
@@ -15,8 +32,8 @@ public class Predator extends Creature {
 
     @Override
     public void makeMove() {
-        //toDo
-        //1. если воблизости есть травоядное - атаковать (хп травоядного уменьшается на количество атаки)
-        //2. если нет - радномно переместиться.
+        // todo
+        // 1. если вблизи есть травоядное — атаковать
+        // 2. если нет — случайно переместиться
     }
 }
