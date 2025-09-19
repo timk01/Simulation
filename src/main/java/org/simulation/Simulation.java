@@ -40,7 +40,7 @@ public class Simulation {
 
     public static void main(String[] args) {
         WorldMap worldMap = new WorldMap();
-        Renderer renderer = new Renderer();
+        Renderer renderer = new Renderer(20);
 
         List<InitAction> initActions = List.of(new InitGrass(), new InitObstacles(), new InitCreatures());
         List<TurnAction> turnActions  = List.of(new MoveCreatures(), new CleanDeadAction(), new GrowGrass());
@@ -50,10 +50,11 @@ public class Simulation {
         simulation.startSimulation();
         renderer.render(worldMap);
 
-        boolean running = true;
+/*        boolean running = true;
         while (running) {
             simulation.nextTurn();
             renderer.render(worldMap);
-        }
+            running = false;
+        }*/
     }
 }
