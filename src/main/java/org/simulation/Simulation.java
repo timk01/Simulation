@@ -8,11 +8,12 @@ import java.util.List;
 public class Simulation {
 
     private WorldMap map;
+
     private int moves;
+
     private Renderer renderer;
     private List<InitAction> oneTimeActions;
     private List<TurnAction> eachTurnActions;
-
     public Simulation(WorldMap map, Renderer renderer,
                       List<InitAction> init, List<TurnAction> turn) {
         this.map = map;
@@ -20,6 +21,10 @@ public class Simulation {
         this.oneTimeActions = init;
         this.eachTurnActions = turn;
         this.moves = 0;
+    }
+
+    public int getMoves() {
+        return moves;
     }
     public void nextTurn() {
         for (TurnAction action : eachTurnActions) {
@@ -40,7 +45,7 @@ public class Simulation {
 
     public static void main(String[] args) throws InterruptedException {
         WorldMap worldMap = new WorldMap(20, 20);
-        Renderer renderer = new Renderer(worldMap, 30);
+        Renderer renderer = new Renderer(worldMap);
 
         List<InitAction> initActions = List.of(new InitGrass(), new InitObstacles(), new InitCreatures());
         List<TurnAction> turnActions  = List.of(new MoveCreatures(), new CleanDeadAction(), new GrowGrass());
@@ -48,14 +53,16 @@ public class Simulation {
         Simulation simulation = new Simulation(worldMap, renderer, initActions, turnActions);
 
         simulation.startSimulation();
-        renderer.render(worldMap);
+        renderer.render(worldMap, simulation.getMoves());
 
         boolean running = true;
         while (running) {
-            Thread.sleep(500);
+            Thread.sleep(1000);
             simulation.nextTurn();
-            renderer.render(worldMap);
-            running = false;
+            renderer.render(worldMap, simulation.getMoves());
+            if (simulation.moves >= 20) {
+                running = false;
+            }
         }
     }
 }

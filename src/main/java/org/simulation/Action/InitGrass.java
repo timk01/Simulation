@@ -1,7 +1,6 @@
 package org.simulation.Action;
 
 import org.entity.Grass;
-import org.map.Location;
 import org.map.WorldMap;
 import org.simulation.InitAction;
 import org.simulation.Renderer;

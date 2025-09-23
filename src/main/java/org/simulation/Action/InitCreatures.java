@@ -17,7 +17,7 @@ public class InitCreatures implements InitAction {
     }
 
     public InitCreatures() {
-        this(10);
+        this(5);
     }
     @Override
     public void initiate(WorldMap map) {

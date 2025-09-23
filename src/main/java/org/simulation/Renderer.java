@@ -17,16 +17,29 @@ public class Renderer {
     private final JLabel[][] cells;
     private JFrame jFrame;
     private JPanel jpanel;
+    private JLabel herbivoreCountLabel;
+    private JLabel predatorCountLabel;
+    private JLabel turnLabel;
 
-    public Renderer(WorldMap map, int cellSize) {
+    public Renderer(WorldMap map) {
         this.cellSize = 32;
-        this.cells = new JLabel[map.getWidth()][map.getHeight()];
+        this.cells = new JLabel[map.getHeight()][map.getWidth()];
 
         jFrame = new JFrame("Simulation");
         jFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        jFrame.setLayout(new BorderLayout());
 
-        jpanel = new JPanel(new GridLayout(map.getWidth(), map.getHeight()));
+        jpanel = new JPanel(new GridLayout(map.getHeight(), map.getWidth()));
         jFrame.add(jpanel);
+
+        JPanel statsPanel = new JPanel(new FlowLayout());
+        herbivoreCountLabel = new JLabel("Herbivores: 0");
+        predatorCountLabel = new JLabel("Predators: 0");
+        turnLabel = new JLabel("Turn: 0");
+        statsPanel.add(herbivoreCountLabel);
+        statsPanel.add(predatorCountLabel);
+        statsPanel.add(turnLabel);
+        jFrame.add(statsPanel, BorderLayout.SOUTH);
 
         icons.put(Grass.class, loadIcon("/icons/grass.png"));
         icons.put(Rock.class, loadIcon("/icons/rock.png"));
@@ -49,7 +62,7 @@ public class Renderer {
                 cell.setHorizontalAlignment(SwingConstants.CENTER);
 
                 jpanel.add(cell);
-                cells[column][row] = cell;
+                cells[row][column] = cell;
             }
         }
     }
@@ -60,25 +73,34 @@ public class Renderer {
         return new ImageIcon(scaled);
     }
 
-    public void render(WorldMap map) {
+    public void render(WorldMap map, int turn) {
         cleanBoard();
+
+        int herbivoreCount = 0;
+        int predatorCount = 0;
 
         for (Map.Entry<Location, Entity> cell : map.getCells().entrySet()) {
             Location location = cell.getKey();
             Entity clazz = cell.getValue();
             Icon icon = icons.get(clazz.getClass());
             if (icon != null) {
-                cells[location.getX()][location.getY()].setIcon(icon);
+                cells[location.y()][location.x()].setIcon(icon);
             }
+
+            if (clazz instanceof Herbivore) herbivoreCount++;
+            if (clazz instanceof Predator) predatorCount++;
         }
-        jpanel.revalidate();
+        herbivoreCountLabel.setText("Herbivores: " + herbivoreCount);
+        predatorCountLabel.setText("Predators: " + predatorCount);
+        turnLabel.setText("Turn: " + turn);
+
         jpanel.repaint();
     }
 
     private void cleanBoard() {
-        for (int x = 0; x < cells.length; x++) {
-            for (int y = 0; y < cells[x].length; y++) {
-                cells[x][y].setIcon(null);
+        for (JLabel[] cell : cells) {
+            for (JLabel jLabel : cell) {
+                jLabel.setIcon(null);
             }
         }
     }
