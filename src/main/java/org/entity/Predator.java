@@ -16,7 +16,7 @@ public class Predator extends Creature {
 
     private final int attackStrength;
 
-    private int killedEntities;
+    //private int killedEntities;
 
     public Predator(Random random) {
         super(
@@ -31,37 +31,16 @@ public class Predator extends Creature {
         this.attackStrength = attackStrength;
     }
 
-    public int getKilledEntities() {
+/*    public int getKilledEntities() {
         return killedEntities;
     }
 
     public void resetKilledEntities() {
         this.killedEntities = 0;
-    }
+    }*/
 
     public int getAttackStrength() {
         return attackStrength;
-    }
-
-    private Location getRandomLocation(WorldMap map, Location location) {
-        int x;
-        int y;
-        Location newLocation;
-        Random random = new Random();
-        do {
-            x = location.x();
-            y = location.y();
-            int number = random.nextInt(4);
-            switch (number) {
-                case 0 -> newLocation = new Location(x + 1, y);
-                case 1 -> newLocation = new Location(x - 1, y);
-                case 2 -> newLocation = new Location(x, y + 1);
-                case 3 -> newLocation = new Location(x, y - 1);
-                default -> newLocation = location;
-            }
-            ;
-        } while (!isFree(map, newLocation));
-        return newLocation;
     }
 
     @Override
@@ -84,15 +63,24 @@ public class Predator extends Creature {
 
     @Override
     public Location makeMove(WorldMap map, Location location) {
-        Location newRandomLocation = getRandomLocation(map, location);
+        Location newRandomLocation;
+        int turn = 0;
+        int speed = getSpeed();
+        boolean isNextMovePossible = false;
+        do {
+            newRandomLocation = getRandomLocation(map, location);
 
-        Entity entityOnNextPoint = map.getEntityByLocation(newRandomLocation);
-        if (entityOnNextPoint instanceof Herbivore herbivore) {
-            return tryKill(map, location, newRandomLocation, herbivore);
-        }
-        if (!canMoveInto(entityOnNextPoint)) {
-            return location;
-        }
+            Entity entityOnNextPoint = map.getEntityByLocation(newRandomLocation);
+            if (entityOnNextPoint instanceof Herbivore herbivore) {
+                newRandomLocation = tryKill(map, location, newRandomLocation, herbivore);
+            } else if (!canMoveInto(entityOnNextPoint)) {
+                newRandomLocation = location;
+            } else {
+                isNextMovePossible = true;
+            }
+            turn++;
+        } while (turn < speed && isNextMovePossible);
+
         return newRandomLocation;
         // todo
         // 1. если вблизи есть травоядное — атаковать +
@@ -100,21 +88,28 @@ public class Predator extends Creature {
         // !!! 3. добавить скорость И вижн
     }
 
-    private Location tryKill(WorldMap map, Location location, Location newRandomLocation, Herbivore herbivore) {
+    private Location tryKill(WorldMap map, Location predatorLoc, Location targetLoc, Herbivore herbivore) {
         int herbivoreHp = herbivore.getHp();
         herbivore.setHp(Math.max(0, herbivoreHp - this.attackStrength));
 
         Random random = new Random();
         if (herbivore.getHp() == 0) {
-            killedEntities++;
+            herbivore.setDeathReason(DeathReason.KILLED_BY_PREDATOR);
+            //killedEntities++;
+            herbivore.setKilledBy(this);
+            System.out.println("BEFORE " + "[EAT] Predator at " + targetLoc
+                    + " killed " + herbivore.getClass().getSimpleName()
+                    + ", predator hp=" + this.getHp());
             int minGain = Math.max(1, this.attackStrength / 2);
             int maxGain = Math.max(minGain, herbivoreHp / 2);
             int killHp = random.nextInt(maxGain - minGain + 1) + minGain;
             this.setHp(this.getHp() + killHp);
-/*            map.placeEntity(newRandomLocation, this);
-            map.removeEntity(location);*/
-            return newRandomLocation;
+            System.out.println("AFTER " + "[EAT] Predator at " + targetLoc
+                    + " killed " + herbivore.getClass().getSimpleName()
+                    + ", predator hp=" + this.getHp());
+            //map.removeEntity(targetLoc);
+            return targetLoc;
         }
-        return location;
+        return predatorLoc;
     }
 }

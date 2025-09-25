@@ -2,6 +2,7 @@ package org.entity;
 
 import org.map.Location;
 import org.map.WorldMap;
+import org.simulation.Action.Statistic;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,11 +16,13 @@ public class Herbivore extends Creature {
     private static final int MAX_HP = 20;
 
     private int consumedGrass;
+    private Predator killedBy;
 
     public Herbivore(Random random) {
         super(
                 random.nextInt(MAX_SPEED - MIN_SPEED + 1) + MIN_SPEED,
-                random.nextInt(MAX_HP - MIN_HP + 1) + MIN_HP);
+                random.nextInt(MAX_HP - MIN_HP + 1) + MIN_HP
+        );
     }
 
     public Herbivore(int speed, int hp) {
@@ -34,40 +37,35 @@ public class Herbivore extends Creature {
         this.consumedGrass = 0;
     }
 
-    private Location getRandomLocation(WorldMap map, Location location) {
-        int x;
-        int y;
-        Location newLocation;
-        Random random = new Random();
-        do {
-            x = location.x();
-            y = location.y();
-            int number = random.nextInt(4);
-            switch (number) {
-                case 0 -> newLocation = new Location(x + 1, y);
-                case 1 -> newLocation = new Location(x - 1, y);
-                case 2 -> newLocation = new Location(x, y + 1);
-                case 3 -> newLocation = new Location(x, y - 1);
-                default -> newLocation = location;
-            };
-        } while (!isFree(map, newLocation));
-        return newLocation;
+    public Predator getKilledBy() {
+        return killedBy;
+    }
+
+    public void setKilledBy(Predator killedBy) {
+        this.killedBy = killedBy;
     }
 
     @Override
     public Location makeMove(WorldMap map, Location location) {
-        Location newRandomLocation = getRandomLocation(map, location);
+        Location newRandomLocation;
+        int turn = 0;
+        int speed = getSpeed();
+        boolean isNextMovePossible = false;
+        do {
+            newRandomLocation = getRandomLocation(map, location);
 
-        Entity entityOnNextPoint = map.getEntityByLocation(newRandomLocation);
-        if (entityOnNextPoint instanceof Predator) {
-            Location escapeWay = tryRunAway(map, location, newRandomLocation);
-            tryEatGrass(map, escapeWay);
-            return escapeWay;
-        }
-        if (!canMoveInto(entityOnNextPoint)) {
-            return location;
-        }
-        tryEatGrass(map, newRandomLocation);
+            Entity entityOnNextPoint = map.getEntityByLocation(newRandomLocation);
+            if (entityOnNextPoint instanceof Predator) {
+                newRandomLocation = tryRunAway(map, location, newRandomLocation);
+                tryEatGrass(map, newRandomLocation);
+            } else if (!canMoveInto(entityOnNextPoint)) {
+                newRandomLocation = location;
+            } else {
+                tryEatGrass(map, newRandomLocation);
+                isNextMovePossible = true;
+            }
+            turn++;
+        } while (turn < speed && isNextMovePossible);
 
         return newRandomLocation;
         //todo
@@ -89,11 +87,13 @@ public class Herbivore extends Creature {
 
             int gain = random.nextInt(maxGain - minGain + 1) + minGain;
             this.setHp(this.getHp() + gain);
-
             consumedGrass++;
-/*
-            map.removeEntity(newLocation);
-*/
+            grass.setEatenBy(this);
+            System.out.println("[DEBUG][EAT] " + this.getIdString() +
+                    " ate Grass at " + newLocation +
+                    " gain=" + gain +
+                    ", hp=" + this.getHp());
+            //map.removeEntity(newLocation);
         }
     }
 
@@ -157,7 +157,6 @@ public class Herbivore extends Creature {
     public boolean canMoveInto(Entity target) {
         return !(target instanceof Rock
                 || target instanceof Tree
-                || target instanceof Herbivore
-                || target instanceof Predator);
+                || target instanceof Herbivore);
     }
 }

@@ -2,6 +2,7 @@ package org.entity;
 
 public class Grass extends StaticEntity {
     private int nutrition;
+    private Herbivore eatenBy;
 
     public Grass() {
         nutrition = 10;
@@ -17,5 +18,13 @@ public class Grass extends StaticEntity {
 
     public void setNutrition(int nutrition) {
         this.nutrition = nutrition;
+    }
+
+    public Herbivore getEatenBy() {
+        return eatenBy;
+    }
+
+    public void setEatenBy(Herbivore eatenBy) {
+        this.eatenBy = eatenBy;
     }
 }

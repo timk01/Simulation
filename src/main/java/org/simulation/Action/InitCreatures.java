@@ -10,22 +10,37 @@ import org.simulation.InitAction;
 import java.util.Random;
 
 public class InitCreatures implements InitAction {
-    private int counter;
+    private final int herbivoreCount;
+    private final int predatorCount;
 
-    public InitCreatures(int counter) {
-        this.counter = counter;
+    public InitCreatures(int herbivoreCount, int predatorCount) {
+        this.herbivoreCount = herbivoreCount;
+        this.predatorCount = predatorCount;
     }
 
     public InitCreatures() {
-        this(5);
+        this.herbivoreCount = 15;
+        this.predatorCount = 15;
     }
+
+    public int getHerbivoreCount() {
+        return herbivoreCount;
+    }
+
+    public int getPredatorCount() {
+        return predatorCount;
+    }
+
     @Override
     public void initiate(WorldMap map) {
         int max = map.getInitialCapacity();
 
         Random random = new Random();
 
-        placePair(map, random, counter, max, Herbivore::new, Predator::new);
+        //placePair(map, random, counter, max, Herbivore::new, Predator::new);
+
+        placeRandomEntities(map, random, herbivoreCount, Herbivore::new);
+        placeRandomEntities(map, random, predatorCount, Predator::new);
     }
 
 }
