@@ -3,43 +3,56 @@ package org.entity;
 import org.map.Location;
 import org.map.WorldMap;
 
-import java.util.Objects;
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public abstract class Creature extends Entity {
-    private static int idOverallCounter = 0;
-    private int id;
+    private static final AtomicInteger idOverallCounter = new AtomicInteger(0);
+    private static final int DEFAULT_SPEED = 1;
+    private static final int DEFAULT_HP = 10;
+    private final int id;
     private int speed;
     private int hp;
-    private int turn;
     private DeathReason deathReason;
 
     public Creature(int speed, int hp) {
-        this.speed = speed;
-        this.hp = hp;
-        this.id = ++idOverallCounter;
+        this.id = idOverallCounter.incrementAndGet();
+        this.speed = Math.max(speed, DEFAULT_SPEED);
+        this.hp = Math.max(hp, DEFAULT_HP);
     }
 
     public String getIdString() {
         return getClass().getSimpleName() + "#" + id;
     }
 
+    public int getId() {
+        return id;
+    }
+
+    protected String extraToString() { return ""; }
+
     @Override
     public String toString() {
-        return getIdString();
+        String state = (deathReason == null) ? "alive" : ("dead:" + deathReason);
+        String extra = extraToString();
+        if (!extra.isEmpty() && !extra.startsWith(",")) {
+            extra = ", " + extra;
+        }
+
+        return "%s#%d{hp=%d, speed=%d, %s%s}"
+                .formatted(getClass().getSimpleName(), id, hp, speed, state, extra);
     }
 
     public boolean tick() {
-        turn++;
-
+        if (isDead()) {
+            return false;
+        }
         if (hp > 0) {
             hp--;
         }
-
         if (hp <= 0 && deathReason == null) {
             deathReason = DeathReason.STARVATION;
         }
-
         return hp <= 0;
     }
 
@@ -56,7 +69,7 @@ public abstract class Creature extends Entity {
     }
 
     public void setSpeed(int speed) {
-        this.speed = speed;
+        this.speed = Math.max(DEFAULT_SPEED, speed);
     }
 
     public int getHp() {
@@ -64,35 +77,38 @@ public abstract class Creature extends Entity {
     }
 
     public void setHp(int hp) {
-        this.hp = hp;
-    }
-
-    protected Location getRandomLocation(WorldMap map, Location location) {
-        int x;
-        int y;
-        Location newLocation;
-        Random random = new Random();
-        do {
-            x = location.x();
-            y = location.y();
-            int number = random.nextInt(4);
-            switch (number) {
-                case 0 -> x++;
-                case 1 -> x--;
-                case 2 -> y++;
-                case 3 -> y--;
-                default -> {
-                    return location;
-                }
-            }
-            newLocation = new Location(x, y);
-        } while (!isInsideMap(map, newLocation));
-        return newLocation;
+        this.hp = Math.max(0, hp);
     }
 
     protected boolean isInsideMap(WorldMap map, Location location) {
         return location.x() >= 0 && location.x() < map.getWidth()
                 && location.y() >= 0 && location.y() < map.getHeight();
+    }
+
+    private boolean isMapTiny(WorldMap map) {
+        return map.getHeight() <= 1 && map.getWidth() <= 1;
+    }
+
+    protected Location getRandomLocation(WorldMap map, Location location) {
+        if (isMapTiny(map)) {
+            return location;
+        }
+
+        Location newLocation;
+        do {
+            int x = location.x();
+            int y = location.y();
+            int number = ThreadLocalRandom.current().nextInt(4);
+            switch (number) {
+                case 0 -> x++;
+                case 1 -> x--;
+                case 2 -> y++;
+                case 3 -> y--;
+            }
+            newLocation = new Location(x, y);
+        } while (!isInsideMap(map, newLocation));
+
+        return newLocation;
     }
 
     public DeathReason getDeathReason() {
@@ -105,39 +121,6 @@ public abstract class Creature extends Entity {
 
     public enum DeathReason {
         STARVATION,
-        KILLED_BY_PREDATOR,
-        UNKNOWN;
+        KILLED_BY_PREDATOR;
     }
-
-/*
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Creature creature = (Creature) o;
-        return id == creature.id;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id);
-    }
-*/
-
-/*    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        Creature creature = (Creature) o;
-        return id == creature.id && speed == creature.speed && hp == creature.hp && turn == creature.turn && deathReason == creature.deathReason;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id, speed, hp, turn, deathReason);
-    }*/
 }

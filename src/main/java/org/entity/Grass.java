@@ -1,15 +1,17 @@
 package org.entity;
 
 public class Grass extends StaticEntity {
+    public static final int DEFAULT_NUTRITION = 10;
+
     private int nutrition;
     private Herbivore eatenBy;
 
     public Grass() {
-        nutrition = 10;
+        this(DEFAULT_NUTRITION);
     }
 
     public Grass(int nutrition) {
-        this.nutrition = nutrition;
+        this.nutrition = Math.max(DEFAULT_NUTRITION, nutrition);
     }
 
     public int getNutrition() {
@@ -17,7 +19,7 @@ public class Grass extends StaticEntity {
     }
 
     public void setNutrition(int nutrition) {
-        this.nutrition = nutrition;
+        this.nutrition = Math.max(DEFAULT_NUTRITION, nutrition);
     }
 
     public Herbivore getEatenBy() {
@@ -26,5 +28,11 @@ public class Grass extends StaticEntity {
 
     public void setEatenBy(Herbivore eatenBy) {
         this.eatenBy = eatenBy;
+    }
+
+    @Override
+    public String toString() {
+        return "Grass{nutrition=" + nutrition +
+                (eatenBy != null ? ", eatenBy=" + eatenBy.getIdString() : "") + "}";
     }
 }

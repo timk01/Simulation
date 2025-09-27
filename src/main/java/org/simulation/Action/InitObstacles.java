@@ -27,8 +27,6 @@ public class InitObstacles implements InitAction {
     public void initiate(WorldMap map) {
         int max = map.getInitialCapacity();
 
-        Random random = new Random();
-
-        placePair(map, random, counter, max, r -> new Rock(), r -> new Tree());
+        placePair(map, counter, max, Rock::new, Tree::new);
     }
 }

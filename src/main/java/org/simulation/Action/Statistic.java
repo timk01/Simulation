@@ -22,12 +22,6 @@ public class Statistic {
         int herbivores = 0;
         int predators = 0;
 
-/*        for (InitAction action : initActions) {
-            if (action instanceof InitCreatures init) {
-                herbivores = init.getCounter();
-                predators = init.getCounter();
-            }
-        }*/
         for (InitAction action : initActions) {
             if (action instanceof InitCreatures init) {
                 herbivores = init.getHerbivoreCount();
@@ -51,6 +45,7 @@ public class Statistic {
                         + " reason=" + p.getDeathReason());
             }
         });
+
         long currentHerbivores = map.getCells().values().stream()
                 .filter(e -> e instanceof Herbivore)
                 .count();
@@ -70,6 +65,17 @@ public class Statistic {
                 + ", left=" + currentPredators
                 + ", dead=" + totalDeadPredators
                 + ", sum=" + (currentPredators + totalDeadPredators));
+
+        int sumKills = getTotalPredatorKills();
+        if (sumKills != killedByPredator) {
+            System.out.println("[WARN] kills-by-predator sum=" + sumKills
+                    + " != killedByPredator=" + killedByPredator);
+        }
+
+        int sumGrass = getTotalGrassEaten();
+        if (sumGrass > 0) {
+            System.out.println("[CHECK] Grass eaten total=" + sumGrass);
+        }
     }
 
     public void deathRegistrator(Creature creature) {

@@ -2,25 +2,26 @@ package org.simulation.Action;
 
 import org.entity.Herbivore;
 import org.entity.Predator;
-import org.entity.Rock;
-import org.entity.Tree;
 import org.map.WorldMap;
 import org.simulation.InitAction;
 
-import java.util.Random;
+import java.util.Map;
 
 public class InitCreatures implements InitAction {
+    private static final int DEFAULT_HERBIVORES = 15;
+    private static final int DEFAULT_PREDATORS = 15;
+    private static final int MINIMUM_CREATURES = 5;
+
     private final int herbivoreCount;
     private final int predatorCount;
 
     public InitCreatures(int herbivoreCount, int predatorCount) {
-        this.herbivoreCount = herbivoreCount;
-        this.predatorCount = predatorCount;
+        this.herbivoreCount = (herbivoreCount < MINIMUM_CREATURES) ? DEFAULT_HERBIVORES : herbivoreCount;
+        this.predatorCount = (predatorCount < MINIMUM_CREATURES) ? DEFAULT_PREDATORS : predatorCount;
     }
 
     public InitCreatures() {
-        this.herbivoreCount = 15;
-        this.predatorCount = 15;
+        this(DEFAULT_HERBIVORES, DEFAULT_PREDATORS);
     }
 
     public int getHerbivoreCount() {
@@ -33,14 +34,10 @@ public class InitCreatures implements InitAction {
 
     @Override
     public void initiate(WorldMap map) {
-        int max = map.getInitialCapacity();
-
-        Random random = new Random();
-
-        //placePair(map, random, counter, max, Herbivore::new, Predator::new);
-
-        placeRandomEntities(map, random, herbivoreCount, Herbivore::new);
-        placeRandomEntities(map, random, predatorCount, Predator::new);
+/*        int freeCapacity = map.getFreeCapacity();
+        if (herbivoreCount + predatorCount >= freeCapacity / )*/
+        placeRandomEntities(map, herbivoreCount, Herbivore::new);
+        placeRandomEntities(map, predatorCount, Predator::new);
     }
 
 }

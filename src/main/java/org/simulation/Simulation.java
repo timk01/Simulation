@@ -76,7 +76,7 @@ public class Simulation {
         List<TurnAction> turnActions = List.of(
                 new TickAction(statistic),
                 new MoveCreatures(statistic),
-                new FlushGrassEatenAction(statistic),
+                new FlushGrassEatenAction(),
                 new CleanDeadAction(statistic),
                 new GrowGrass()
         );
@@ -99,11 +99,11 @@ public class Simulation {
 
         boolean running = true;
         while (running) {
-            Thread.sleep(1500);
+            Thread.sleep(150);
             simulation.nextTurn();
             //statistic.printConsistencyCheck(worldMap);
             renderer.render(worldMap, simulation.getMoves(), statistic);
-            if (simulation.moves >= 20) {
+            if (simulation.moves >= 30) {
                 running = false;
             }
         }

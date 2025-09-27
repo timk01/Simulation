@@ -11,29 +11,29 @@ import java.util.function.Supplier;
 public interface InitAction {
     void initiate(WorldMap map);
 
-    default void placeRandomEntities(WorldMap map, Random random, int count,
-                                     Function<Random, ? extends Entity> factory) {
+    default void placeRandomEntities(WorldMap map, int count,
+                                     Supplier<? extends Entity> factory) {
         int placed = 0;
         while (placed < count) {
-            Location loc = map.getRandomLocation(random);
+            Location loc = map.getRandomLocation();
             if (!map.checkLocation(loc)) {
-                map.placeEntity(loc, factory.apply(random));
+                map.placeEntity(loc, factory.get());
                 placed++;
             }
         }
     }
 
-    default void placePair(WorldMap map, Random random, int counter, int max,
-                           Function<Random, ? extends Entity> first,
-                           Function<Random, ? extends Entity> second) {
+    default void placePair(WorldMap map, int counter, int max,
+                           Supplier<? extends Entity> first,
+                           Supplier<? extends Entity> second) {
         int totalToPlace = counter * 2;
         if (totalToPlace > max) {
             int reduced = max / 2;
-            placeRandomEntities(map, random, reduced, first);
-            placeRandomEntities(map, random, max - reduced, second);
+            placeRandomEntities(map, reduced, first);
+            placeRandomEntities(map, max - reduced, second);
         } else {
-            placeRandomEntities(map, random, counter, first);
-            placeRandomEntities(map, random, counter, second);
+            placeRandomEntities(map, counter, first);
+            placeRandomEntities(map, counter, second);
         }
     }
 }

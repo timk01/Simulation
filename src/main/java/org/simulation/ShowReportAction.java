@@ -35,7 +35,8 @@ public class ShowReportAction implements FinishAction {
                 statistic.getInitialPredators(),
                 statistic.getStarvedHerbivores(),
                 statistic.getStarvedPredators(),
-                statistic.getKilledByPredator(),
+                statistic.getTotalPredatorKills(),
+                //statistic.getKilledByPredator(),
                 statistic.getKillsByPredator(),
                 statistic.getGrassEatenByHerbivore()
         );

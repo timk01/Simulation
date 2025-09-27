@@ -3,7 +3,7 @@ package org.entity;
 import org.map.Location;
 import org.map.WorldMap;
 
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class Predator extends Creature {
 
@@ -16,29 +16,18 @@ public class Predator extends Creature {
 
     private final int attackStrength;
 
-    //private int killedEntities;
-
-    public Predator(Random random) {
+    public Predator() {
         super(
-                random.nextInt(MAX_SPEED - MIN_SPEED + 1) + MIN_SPEED,
-                random.nextInt(MAX_HP - MIN_HP + 1) + MIN_HP
+                ThreadLocalRandom.current().nextInt(MAX_SPEED - MIN_SPEED + 1) + MIN_SPEED,
+                ThreadLocalRandom.current().nextInt(MAX_HP - MIN_HP + 1) + MIN_HP
         );
-        this.attackStrength = random.nextInt(MAX_ATTACK - MIN_ATTACK + 1) + MIN_ATTACK;
+        this.attackStrength = ThreadLocalRandom.current().nextInt(MAX_ATTACK - MIN_ATTACK + 1) + MIN_ATTACK;
     }
 
     public Predator(int speed, int hp, int attackStrength) {
         super(speed, hp);
         this.attackStrength = attackStrength;
     }
-
-/*    public int getKilledEntities() {
-        return killedEntities;
-    }
-
-    public void resetKilledEntities() {
-        this.killedEntities = 0;
-    }*/
-
     public int getAttackStrength() {
         return attackStrength;
     }
@@ -51,14 +40,34 @@ public class Predator extends Creature {
                 || target instanceof Predator);
     }
 
-    private boolean isFree(WorldMap map, Location location) {
-        if (location.x() < 0 || location.x() >= map.getWidth()) {
-            return false;
+    @Override
+    protected String extraToString() {
+        return "atk=" + attackStrength;
+    }
+
+    private Location tryKill(Location predatorLoc, Location targetLoc, Herbivore herbivore) {
+        if (herbivore.isDead()) {
+            return predatorLoc;
         }
-        if (location.y() < 0 || location.y() >= map.getHeight()) {
-            return false;
+
+        int herbivoreHp = herbivore.getHp();
+        herbivore.setHp(Math.max(0, herbivoreHp - this.attackStrength));
+
+        if (herbivore.getHp() == 0) {
+            herbivore.setDeathReason(DeathReason.KILLED_BY_PREDATOR);
+            herbivore.setKilledBy(this);
+
+            int selfBefore = this.getHp();
+            int minGain = Math.max(1, this.attackStrength / 2);
+            int maxGain = Math.max(minGain, herbivoreHp / 2);
+            int killHp = ThreadLocalRandom.current().nextInt(maxGain - minGain + 1) + minGain;
+            this.setHp(this.getHp() + killHp);
+
+            System.out.printf("[EAT] %s killed %s at %s, gain=%d, hp=%d->%d%n",
+                    this, herbivore, targetLoc, killHp, selfBefore, this.getHp());
+            return targetLoc;
         }
-        return true;
+        return predatorLoc;
     }
 
     @Override
@@ -72,7 +81,7 @@ public class Predator extends Creature {
 
             Entity entityOnNextPoint = map.getEntityByLocation(newRandomLocation);
             if (entityOnNextPoint instanceof Herbivore herbivore) {
-                newRandomLocation = tryKill(map, location, newRandomLocation, herbivore);
+                newRandomLocation = tryKill(location, newRandomLocation, herbivore);
             } else if (!canMoveInto(entityOnNextPoint)) {
                 newRandomLocation = location;
             } else {
@@ -82,34 +91,5 @@ public class Predator extends Creature {
         } while (turn < speed && isNextMovePossible);
 
         return newRandomLocation;
-        // todo
-        // 1. если вблизи есть травоядное — атаковать +
-        // 2. если нет — случайно переместиться +
-        // !!! 3. добавить скорость И вижн
-    }
-
-    private Location tryKill(WorldMap map, Location predatorLoc, Location targetLoc, Herbivore herbivore) {
-        int herbivoreHp = herbivore.getHp();
-        herbivore.setHp(Math.max(0, herbivoreHp - this.attackStrength));
-
-        Random random = new Random();
-        if (herbivore.getHp() == 0) {
-            herbivore.setDeathReason(DeathReason.KILLED_BY_PREDATOR);
-            //killedEntities++;
-            herbivore.setKilledBy(this);
-            System.out.println("BEFORE " + "[EAT] Predator at " + targetLoc
-                    + " killed " + herbivore.getClass().getSimpleName()
-                    + ", predator hp=" + this.getHp());
-            int minGain = Math.max(1, this.attackStrength / 2);
-            int maxGain = Math.max(minGain, herbivoreHp / 2);
-            int killHp = random.nextInt(maxGain - minGain + 1) + minGain;
-            this.setHp(this.getHp() + killHp);
-            System.out.println("AFTER " + "[EAT] Predator at " + targetLoc
-                    + " killed " + herbivore.getClass().getSimpleName()
-                    + ", predator hp=" + this.getHp());
-            //map.removeEntity(targetLoc);
-            return targetLoc;
-        }
-        return predatorLoc;
     }
 }

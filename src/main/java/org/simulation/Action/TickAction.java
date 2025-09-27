@@ -15,10 +15,8 @@ public class TickAction implements TurnAction {
     @Override
     public void update(WorldMap map) {
         for (Entity e : map.getCells().values()) {
-            if (e instanceof Creature c) {
-                if (c.tick()) { // true если умер от голода
+            if (e instanceof Creature c && c.tick()) {
                     statistic.deathRegistrator(c);
-                }
             }
         }
     }
