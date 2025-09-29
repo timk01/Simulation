@@ -47,6 +47,7 @@ public class Simulation {
         for (InitAction action : oneTimeActions) {
             action.initiate(map);
         }
+        statistic.captureInitial(map);
     }
 
     public void finishSimulation() {
@@ -71,7 +72,7 @@ public class Simulation {
                 new InitObstacles(),
                 new InitCreatures()
         );
-        Statistic statistic = new Statistic(initActions);
+        Statistic statistic = new Statistic();
 
         List<TurnAction> turnActions = List.of(
                 new TickAction(statistic),
@@ -82,7 +83,7 @@ public class Simulation {
         );
 
         List<FinishAction> finishActions = List.of(
-                new ShowReportAction(statistic, worldMap)
+                new ShowReportAction(statistic)
         );
 
         Simulation simulation = new Simulation(

@@ -18,6 +18,13 @@ public class CleanDeadAction implements TurnAction {
         this.statistic = statistic;
     }
 
+    private boolean shouldRegisterPredatorKill(Creature creature) {
+        return creature instanceof Herbivore h
+                && h.getDeathReason() == Creature.DeathReason.KILLED_BY_PREDATOR
+                && h.getKilledBy() != null
+                && !statistic.isRegisteredDead(h);
+    }
+
     @Override
     public void update(WorldMap map) {
         List<Location> toRemove = new ArrayList<>();
@@ -42,12 +49,5 @@ public class CleanDeadAction implements TurnAction {
         for (Location loc : toRemove) {
             map.removeEntity(loc);
         }
-    }
-
-    private boolean shouldRegisterPredatorKill(Creature creature) {
-        return creature instanceof Herbivore h
-                && h.getDeathReason() == Creature.DeathReason.KILLED_BY_PREDATOR
-                && h.getKilledBy() != null
-                && !statistic.isRegisteredDead(h);
     }
 }

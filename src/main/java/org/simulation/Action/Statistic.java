@@ -18,19 +18,17 @@ public class Statistic {
     private final Map<String, Integer> killsDoneByPredator = new HashMap<>();
     private final Map<String, Integer> grassEatenByHerbivore = new HashMap<>();
 
-    public Statistic(List<InitAction> initActions) {
-        int herbivores = 0;
-        int predators = 0;
+    public Statistic() {
+    }
 
-        for (InitAction action : initActions) {
-            if (action instanceof InitCreatures init) {
-                herbivores = init.getHerbivoreCount();
-                predators = init.getPredatorCount();
-            }
-        }
+    public void captureInitial(WorldMap map) {
+        this.initialHerbivores = (int) map.getCells().values().stream()
+                .filter(e -> e instanceof Herbivore)
+                .count();
 
-        this.initialHerbivores = herbivores;
-        this.initialPredators = predators;
+        this.initialPredators = (int) map.getCells().values().stream()
+                .filter(e -> e instanceof Predator)
+                .count();
     }
 
     public void printConsistencyCheck(WorldMap map) {
@@ -79,24 +77,21 @@ public class Statistic {
     }
 
     public void deathRegistrator(Creature creature) {
-        System.out.println("[STAT] deathRegistrator reason=" + creature.getDeathReason()
-                + " class=" + creature.getClass().getSimpleName());
         if (registeredDead.contains(creature)) {
             return;
         }
         registeredDead.add(creature);
 
+        System.out.println("[STAT] deathRegistrator reason=" + creature.getDeathReason()
+                + " class=" + creature.getClass().getSimpleName());
+
         if (creature instanceof Herbivore
                 && creature.getDeathReason() == Creature.DeathReason.STARVATION) {
             starvedHerbivores++;
-        }
-
-        if (creature instanceof Predator
+        } else if (creature instanceof Predator
                 && creature.getDeathReason() == Creature.DeathReason.STARVATION) {
             starvedPredators++;
-        }
-
-        if (creature instanceof Herbivore
+        } else if (creature instanceof Herbivore
                 && creature.getDeathReason() == Creature.DeathReason.KILLED_BY_PREDATOR) {
             killedByPredator++;
         }
@@ -151,14 +146,16 @@ public class Statistic {
     }
 
     public int getKilledByPredator() { return killedByPredator; }
+
     public Map<String, Integer> getKillsByPredator() { return killsDoneByPredator; }
+
     public Map<String, Integer> getGrassEatenByHerbivore() { return grassEatenByHerbivore; }
 
     public int getTotalPredatorKills() {
         return killsDoneByPredator.values().stream().mapToInt(Integer::intValue).sum();
     }
+
     public int getTotalGrassEaten() {
         return grassEatenByHerbivore.values().stream().mapToInt(Integer::intValue).sum();
     }
-
 }

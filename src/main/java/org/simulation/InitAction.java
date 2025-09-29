@@ -23,17 +23,12 @@ public interface InitAction {
         }
     }
 
-    default void placePair(WorldMap map, int counter, int max,
-                           Supplier<? extends Entity> first,
-                           Supplier<? extends Entity> second) {
-        int totalToPlace = counter * 2;
-        if (totalToPlace > max) {
-            int reduced = max / 2;
-            placeRandomEntities(map, reduced, first);
-            placeRandomEntities(map, max - reduced, second);
-        } else {
-            placeRandomEntities(map, counter, first);
-            placeRandomEntities(map, counter, second);
+    default int getRealEntityQuantityToPlace(WorldMap map, int requestedRoom, double share) {
+        int roomLeft = map.getRoomLeftUnderCap();
+        int allowedByCap = (int) Math.ceil(roomLeft * share);
+        if (allowedByCap == 0 && roomLeft > 0 && requestedRoom > 0) {
+            allowedByCap = 1;
         }
+        return Math.min(requestedRoom, allowedByCap);
     }
 }

@@ -6,27 +6,24 @@ import org.entity.Predator;
 import org.map.WorldMap;
 import org.simulation.Action.Statistic;
 
-import java.awt.*;
-
 public class ShowReportAction implements FinishAction {
     private final Statistic statistic;
-    private final WorldMap map;
 
-    public ShowReportAction(Statistic statistic, WorldMap map) {
+    public ShowReportAction(Statistic statistic) {
         this.statistic = statistic;
-        this.map = map;
     }
+
+    private static long getCount(WorldMap map, Class<? extends Creature> clazz) {
+        return map.getCells().values().stream()
+                .filter(clazz::isInstance)
+                .count();
+    }
+
     @Override
     public void finish(WorldMap map, Renderer renderer) {
-        long herbivoresLeft = map.getCells().values().stream()
-                .filter(e -> e instanceof Herbivore)
-                .count();
+        long herbivoresLeft = getCount(map, Herbivore.class);
 
-        long predatorsLeft = map.getCells().values().stream()
-                .filter(e -> e instanceof Predator)
-                .count();
-
-        //statistic.printConsistencyCheck(worldMap);
+        long predatorsLeft = getCount(map, Predator.class);
 
         renderer.showResults(
                 herbivoresLeft,
@@ -36,7 +33,6 @@ public class ShowReportAction implements FinishAction {
                 statistic.getStarvedHerbivores(),
                 statistic.getStarvedPredators(),
                 statistic.getTotalPredatorKills(),
-                //statistic.getKilledByPredator(),
                 statistic.getKillsByPredator(),
                 statistic.getGrassEatenByHerbivore()
         );

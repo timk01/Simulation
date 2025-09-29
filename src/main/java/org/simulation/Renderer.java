@@ -16,16 +16,37 @@ public class Renderer {
     private final Map<Class<? extends Entity>, Icon> icons = new HashMap<>();
     private final int cellSize;
     private final JLabel[][] cells;
-    private JFrame jFrame;
-    private JPanel jpanel;
-    private JLabel herbivoreCountLabel;
-    private JLabel predatorCountLabel;
-    private JLabel turnLabel;
+    private final JFrame jFrame;
+    private final JPanel gridPanel;
+    private final JLabel herbivoreCountLabel;
+    private final JLabel predatorCountLabel;
+    private final JLabel turnLabel;
 
-    private JLabel starvedHerbivoresLabel;
-    private JLabel starvedPredatorsLabel;
-    private JLabel killedByPredatorsLabel;
-    private JLabel grassEatenTotalLabel;
+    private final JLabel starvedHerbivoresLabel;
+    private final JLabel starvedPredatorsLabel;
+    private final JLabel killedByPredatorsLabel;
+    private final JLabel grassEatenTotalLabel;
+
+    private ImageIcon loadIcon(String path) {
+        ImageIcon icon = new ImageIcon(Objects.requireNonNull(getClass().getResource(path)));
+        Image scaled = icon.getImage().getScaledInstance(cellSize, cellSize, Image.SCALE_SMOOTH);
+        return new ImageIcon(scaled);
+    }
+
+    private void initGrid(WorldMap map) {
+        for (int column = 0; column < map.getWidth(); column++) {
+            for (int row = 0; row < map.getHeight(); row++) {
+                JLabel cell = new JLabel();
+                cell.setPreferredSize(new Dimension(cellSize, cellSize));
+                cell.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+                cell.setHorizontalAlignment(SwingConstants.CENTER);
+
+                gridPanel.add(cell);
+                cells[row][column] = cell;
+            }
+        }
+    }
+
     public Renderer(WorldMap map) {
         this.cellSize = 32;
         this.cells = new JLabel[map.getHeight()][map.getWidth()];
@@ -34,8 +55,8 @@ public class Renderer {
         jFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         jFrame.setLayout(new BorderLayout());
 
-        jpanel = new JPanel(new GridLayout(map.getHeight(), map.getWidth()));
-        jFrame.add(jpanel);
+        gridPanel = new JPanel(new GridLayout(map.getHeight(), map.getWidth()));
+        jFrame.add(gridPanel);
 
         JPanel statsPanel = new JPanel();
         statsPanel.setLayout(new BoxLayout(statsPanel, BoxLayout.Y_AXIS));
@@ -71,15 +92,6 @@ public class Renderer {
         statsPanel.add(row1);
         statsPanel.add(row2);
 
-/*        statsPanel.add(new JSeparator(SwingConstants.VERTICAL));
-        statsPanel.add(starvedHerbivoresLabel);
-        statsPanel.add(starvedPredatorsLabel);
-        statsPanel.add(killedByPredatorsLabel);
-        statsPanel.add(grassEatenTotalLabel);
-
-        statsPanel.add(herbivoreCountLabel);
-        statsPanel.add(predatorCountLabel);
-        statsPanel.add(turnLabel);*/
         jFrame.add(statsPanel, BorderLayout.SOUTH);
 
         icons.put(Grass.class, loadIcon("/icons/grass.png"));
@@ -94,58 +106,26 @@ public class Renderer {
         jFrame.setVisible(true);
     }
 
-    public void render(WorldMap map, int turn, Statistic stat) {
-        render(map, turn);
-
-        starvedHerbivoresLabel.setText("Herbivores starved: " + stat.getStarvedHerbivores());
-        starvedPredatorsLabel.setText("Predators starved: " + stat.getStarvedPredators());
-        killedByPredatorsLabel.setText("Herbivores killed: " + stat.getKilledByPredator());
-        grassEatenTotalLabel.setText("Grass eaten: " + stat.getTotalGrassEaten());
-
-        jpanel.repaint();
-    }
-
-    private void initGrid(WorldMap map) {
-        for (int column = 0; column < map.getWidth(); column++) {
-            for (int row = 0; row < map.getHeight(); row++) {
-                JLabel cell = new JLabel();
-                cell.setPreferredSize(new Dimension(cellSize, cellSize));
-                cell.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-                cell.setHorizontalAlignment(SwingConstants.CENTER);
-
-                jpanel.add(cell);
-                cells[row][column] = cell;
+    private void cleanBoard() {
+        for (JLabel[] cell : cells) {
+            for (JLabel jLabel : cell) {
+                jLabel.setIcon(null);
             }
         }
     }
 
-    private ImageIcon loadIcon(String path) {
-        ImageIcon icon = new ImageIcon(Objects.requireNonNull(getClass().getResource(path)));
-        Image scaled = icon.getImage().getScaledInstance(cellSize, cellSize, Image.SCALE_SMOOTH);
-        return new ImageIcon(scaled);
-    }
-
-    public void render(WorldMap map, int turn) {
-        cleanBoard();
-
-/*        int herbivoreCount = 0;
-        int predatorCount = 0;*/
-
+    private void updateBoard(WorldMap map) {
         for (Map.Entry<Location, Entity> cell : map.getCells().entrySet()) {
             Location location = cell.getKey();
             Entity clazz = cell.getValue();
             Icon icon = icons.get(clazz.getClass());
-            if (/*(location.y() >= 0 && location.y() < map.getHeight()
-                    && location.x() >= 0 && location.x() < map.getWidth())
-                    &&*/ icon != null) {
+            if (icon != null) {
                 cells[location.y()][location.x()].setIcon(icon);
             }
-
-/*            if (clazz instanceof Herbivore) herbivoreCount++;
-            if (clazz instanceof Predator) predatorCount++;
-            if (clazz instanceof Grass) predatorCount++;*/
         }
+    }
 
+    private void updateCounters(WorldMap map, int turn) {
         int herbivoreCount = (int) map.getCells().values().stream()
                 .filter(e -> e instanceof Herbivore)
                 .count();
@@ -156,16 +136,23 @@ public class Renderer {
         herbivoreCountLabel.setText("Herbivores: " + herbivoreCount);
         predatorCountLabel.setText("Predators: " + predatorCount);
         turnLabel.setText("Turn: " + turn);
-
-        jpanel.repaint();
     }
 
-    private void cleanBoard() {
-        for (JLabel[] cell : cells) {
-            for (JLabel jLabel : cell) {
-                jLabel.setIcon(null);
-            }
-        }
+    private void updateStats(Statistic stat) {
+        starvedHerbivoresLabel.setText("Herbivores starved: " + stat.getStarvedHerbivores());
+        starvedPredatorsLabel.setText("Predators starved: " + stat.getStarvedPredators());
+        killedByPredatorsLabel.setText("Herbivores killed: " + stat.getKilledByPredator());
+        grassEatenTotalLabel.setText("Grass eaten: " + stat.getTotalGrassEaten());
+    }
+
+    public void render(WorldMap map, int turn, Statistic stat) {
+        cleanBoard();
+
+        updateBoard(map);
+        updateCounters(map, turn);
+        updateStats(stat);
+
+        gridPanel.repaint();
     }
 
     public void showResults(

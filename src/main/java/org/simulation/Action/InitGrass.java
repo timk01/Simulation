@@ -11,11 +11,11 @@ public class InitGrass implements InitAction {
 
     private final int grassCount;
 
-    public InitGrass(int counter) {
-        if (counter < 0) {
+    public InitGrass(int grassCount) {
+        if (grassCount < 0) {
             throw new IllegalArgumentException("grass quantity cannot be less than zero");
         }
-        this.grassCount = (counter < MINIMUM_GRASS) ? DEFAULT_GRASS : counter;
+        this.grassCount = (grassCount < MINIMUM_GRASS) ? DEFAULT_GRASS : grassCount;
     }
 
     public InitGrass() {
@@ -24,21 +24,12 @@ public class InitGrass implements InitAction {
 
     @Override
     public void initiate(WorldMap map) {
-        int realGrassQuantityToPlace = getRealGrassQuantityToPlace(map);
+        int realGrassQuantityToPlace = getRealEntityQuantityToPlace(map, grassCount, GRASS_SHARE_OF_ROOM);
 
         placeRandomEntities(map, realGrassQuantityToPlace, Grass::new);
         if (realGrassQuantityToPlace < grassCount) {
             System.out.printf("[PLACEMENT][Grass] requested=%d, placed=%d, capLeft=%d%n",
                     grassCount, realGrassQuantityToPlace, map.getRoomLeftUnderCap());
         }
-    }
-
-    private int getRealGrassQuantityToPlace(WorldMap map) {
-        int roomLeft = map.getRoomLeftUnderCap();
-        int allowedByCap = (int) Math.ceil(roomLeft * GRASS_SHARE_OF_ROOM);
-        if (allowedByCap == 0 && roomLeft > 0 && grassCount > 0) {
-            allowedByCap = 1;
-        }
-        return Math.min(grassCount, allowedByCap);
     }
 }
