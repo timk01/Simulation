@@ -3,6 +3,7 @@ package org.simulation.Action;
 import org.entity.*;
 import org.map.Location;
 import org.map.WorldMap;
+import org.map.path.PathFinder;
 import org.simulation.TurnAction;
 
 import java.util.HashSet;
@@ -36,7 +37,7 @@ public class MoveCreatures implements TurnAction {
         reserve.add(result.newLocation);
     }
 
-    private void clearTargetAndRelocateAndReserve(WorldMap map, MoveResult result, Set<Location> reserve) {
+    private void clearTargetAndRelocateAndReserve(WorldMap map, MoveResult result, Set<Location> reserve, Entity currentOccupant) {
         map.removeEntity(result.newLocation);
         relocateAndReserve(map, result, reserve);
     }
@@ -64,6 +65,22 @@ public class MoveCreatures implements TurnAction {
 
     @Override
     public void update(WorldMap map) {
+/*        List<Map.Entry<Location, Entity>> grassList = map.getCells().entrySet().stream()
+                .filter(e -> e instanceof Grass)
+                .toList();*/
+/*
+        List<MoveResult> moveResults = map.getCells().entrySet().stream()
+                .filter(checkIfCreatureAlive())
+                .map(e -> {
+                    Creature creature = (Creature) e.getValue();
+                    Location oldLocation = e.getKey();
+                    if (isGoal(oldLocation)) {
+                        ...
+                    }
+                })
+                .toList();*/
+
+
         List<MoveResult> moveResults = map.getCells().entrySet().stream()
                 .filter(checkIfCreatureAlive())
                 .map(e -> {
@@ -90,12 +107,12 @@ public class MoveCreatures implements TurnAction {
                     statistic.deathRegistrator(victim);
                     statistic.registerPredatorKill(killer);
                 }
-                clearTargetAndRelocateAndReserve(map, result, occupiedLocation);
+                clearTargetAndRelocateAndReserve(map, result, occupiedLocation, currOccupant);
             } else if (hasHerbivoreEaten(result, currOccupant)) {
                 statistic.registerGrassEaten((Herbivore) result.entity);
-                clearTargetAndRelocateAndReserve(map, result, occupiedLocation);
+                clearTargetAndRelocateAndReserve(map, result, occupiedLocation, currOccupant);
             } else if (isDead(currOccupant)) {
-                clearTargetAndRelocateAndReserve(map, result, occupiedLocation);
+                clearTargetAndRelocateAndReserve(map, result, occupiedLocation, currOccupant);
             } else {
                 stay(map, result);
             }
@@ -104,4 +121,19 @@ public class MoveCreatures implements TurnAction {
 
     record MoveResult(Creature entity, Location oldLocation, Location newLocation) {
     }
+
+/*    record MovePlanner(Location initialLocation, Location goal, List<Location> path, int steps, WorldMap map, Creature creature) {
+
+        private static final PathFinder pathFinder = new PathFinder();
+
+        MovePlanner(Location initialLocation, Location goal, List<Location> path, int steps, WorldMap map, Creature creature) {
+            this.initialLocation = initialLocation;
+            this.goal = goal;
+            Map<Location, Location> path1 = pathFinder.findPath(map, initialLocation, goal, creature);
+            this.path = pathFinder.pathReconstruct(path1, initialLocation, goal);
+            this.steps = creature().getSpeed();
+            this.map = map;
+            this.creature = creature;
+        }
+    }*/
 }

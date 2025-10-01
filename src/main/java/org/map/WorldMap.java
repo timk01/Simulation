@@ -1,6 +1,9 @@
 package org.map;
 
 import org.entity.Entity;
+import org.entity.Grass;
+import org.entity.Rock;
+import org.entity.Tree;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -12,6 +15,7 @@ public class WorldMap {
     private static final int DEFAULT_HEIGHT = 20;
     private static final int MINIMUM_THRESHOLD = 10;
 
+    private int worldMapVersion;
     private final int width;
     private final int height;
     private final Map<Location, Entity> cells = new HashMap<>();
@@ -33,7 +37,9 @@ public class WorldMap {
         return height;
     }
 
-
+    public int getWorldMapVersion() {
+        return worldMapVersion;
+    }
 
     public Map<Location, Entity> getCells() {
         return cells;
@@ -66,18 +72,24 @@ public class WorldMap {
         return getInitialCapacity() - getOccupiedCapacity();
     }
 
-
-    public void placeEntity(Location location, Entity entity) {
+    public void placeEntity(Location location, Entity newEntity) {
         if (location == null) {
             throw new NullPointerException("placeEntity: location cannot be null");
         }
-        if (entity == null) {
+        if (newEntity == null) {
             throw new NullPointerException("placeEntity: entity cannot be null");
         }
         if (!isInside(location)) {
             throw new IllegalArgumentException("placeEntity on: " + location + " - location out of bounds");
         }
-        cells.put(location, entity);
+        Entity oldEntity = cells.put(location, newEntity);
+
+        boolean wasRelevantBefore = relevantForMapPath(oldEntity);
+        boolean isRelevantNow = relevantForMapPath(newEntity);
+
+        if (wasRelevantBefore != isRelevantNow) {
+            worldMapVersion++;
+        }
     }
 
     private boolean isInside(Location location) {
@@ -94,6 +106,17 @@ public class WorldMap {
     }
 
     public void removeEntity(Location location) {
-        cells.remove(location);
+        if (location == null) {
+            throw new NullPointerException("removeEntity: location cannot be null");
+        }
+        Entity oldEntity = cells.remove(location);
+
+        if (relevantForMapPath(oldEntity)) {
+            worldMapVersion++;
+        }
+    }
+
+    private boolean relevantForMapPath(Entity e) {
+        return e instanceof Rock || e instanceof Tree || e instanceof Grass;
     }
 }

@@ -2,9 +2,12 @@ package org.entity;
 
 import org.map.Location;
 import org.map.WorldMap;
+import org.map.path.MapAndGoal;
+import org.map.path.PathFinder;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class Herbivore extends Creature {
@@ -139,6 +142,8 @@ public class Herbivore extends Creature {
         boolean ate = false;
 
         do {
+//            Location nextLocation = getRandomLocation(map, currentLocation);
+
             Location nextLocation = getRandomLocation(map, currentLocation);
             Entity entityOnNextPoint = map.getEntityByLocation(nextLocation);
             if (entityOnNextPoint instanceof Predator) {
@@ -162,5 +167,106 @@ public class Herbivore extends Creature {
         } while (turn < speed && isNextMovePossible && !ate);
 
         return currentLocation;
+    }
+
+    @Deprecated(since = "BFT findClosestPath that uses search for multi-targets is much effective, use getFirstLocation + findPath for tests only")
+    private Location getFirstLocation(WorldMap map, Location location, PathFinder pathFinder) {
+        Location currentLocation = location;
+        List<Map.Entry<Location, Entity>> grassList = map.getCells().entrySet().stream()
+                .filter(e -> e.getValue() instanceof Grass)
+                .toList();
+        List<List<Location>> grassPathList = new ArrayList<>();
+        for (Map.Entry<Location, Entity> entry : grassList) {
+            Map<Location, Location> path = pathFinder.findPath(map, currentLocation, entry.getKey());
+            List<Location> locationList = pathFinder.reconstructPath(path, currentLocation, entry.getKey());
+            if (!locationList.isEmpty()) {
+                grassPathList.add(locationList);
+            }
+        }
+        if (grassPathList.isEmpty()) {
+            return currentLocation;
+        }
+        int size = grassPathList.get(0).size();
+        int listNumber = 0;
+        for (int i = 1; i < grassPathList.size(); i++) {
+            if (size > grassPathList.get(i).size()) {
+                size = grassPathList.get(i).size();
+                listNumber = i;
+            }
+        }
+
+        List<Location> shortestRoutreLocationList = grassPathList.get(listNumber);
+        return shortestRoutreLocationList.get(1);
+    }
+
+    private Location findDangerNearby(WorldMap map, Location currentLocation, PathFinder pathFinder) {
+        for (Location neighbourLocation : pathFinder.generateNeighboursInsideMap(currentLocation, map)) {
+            if (map.getEntityByLocation(neighbourLocation) instanceof Predator) {
+                return neighbourLocation;
+            }
+        }
+        return null;
+    }
+
+    public Location makeMove(WorldMap map, Location initialLocation, PathFinder pathFinder) {
+        Location currentLocation = initialLocation;
+        int stepsLeft = getSpeed();
+
+        do {
+            Location dangerNearby = findDangerNearby(map, currentLocation, pathFinder);
+            if (dangerNearby != null) {
+                Location escapeLocation = tryRunAway(map, currentLocation, dangerNearby);
+                if (escapeLocation.equals(currentLocation)) {
+                    break;
+                }
+                currentLocation = escapeLocation;
+                stepsLeft--;
+                if (tryEatGrass(map, currentLocation) || stepsLeft == 0) {
+                    break;
+                }
+                continue;
+            }
+
+            MapAndGoal closestMapPath =
+                    pathFinder.findClosestPath(map, currentLocation, this, Herbivore::isEntityGrass);
+
+            if (closestMapPath.finalLocation() == null) {
+                Location randomLocation = getRandomLocation(map, currentLocation);
+                if (canMoveInto(map.getEntityByLocation(randomLocation))) {
+                    currentLocation = randomLocation;
+                }
+                break;
+            }
+
+            List<Location> closestPathTillGoal =
+                    pathFinder.reconstructPath(closestMapPath.map(), currentLocation, closestMapPath.finalLocation());
+            if (closestPathTillGoal.isEmpty()) {
+                break;
+            }
+
+
+            if (closestPathTillGoal.size() == 1) {
+                tryEatGrass(map, currentLocation);
+                break;
+            }
+
+            Location nextLocation = closestPathTillGoal.get(1);
+            Entity entityOnNextPoint = map.getEntityByLocation(nextLocation);
+            if (!canMoveInto(entityOnNextPoint)) {
+                break;
+            }
+
+            currentLocation = nextLocation;
+            stepsLeft--;
+            if (tryEatGrass(map, currentLocation)) {
+                break;
+            }
+        } while (stepsLeft > 0);
+
+        return currentLocation;
+    }
+
+    public static boolean isEntityGrass(Entity e) {
+        return e instanceof Grass;
     }
 }
