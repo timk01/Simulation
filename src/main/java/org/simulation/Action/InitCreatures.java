@@ -4,29 +4,25 @@ import org.entity.Herbivore;
 import org.entity.Predator;
 import org.map.WorldMap;
 import org.simulation.InitAction;
-
-import java.util.Map;
+import org.simulation.config.CreaturesConfig;
 
 public class InitCreatures implements InitAction {
-    private static final int DEFAULT_HERBIVORES = 15;
-    private static final int DEFAULT_PREDATORS = 15;
-    private static final int MINIMUM_CREATURES = 5;
-    private static final double HERBIVORES_SHARE_OF_ROOM = 0.2;
-    private static final double PREDATORS_SHARE_OF_ROOM = 0.2;
-
     private final int herbivoreCount;
     private final int predatorCount;
+    private final double herbivoresCapShare;
+    private final double predatorsCapShare;
+    private final CreaturesConfig cfg;
 
-    public InitCreatures(int herbivoreCount, int predatorCount) {
-        if (herbivoreCount < 0 || predatorCount < 0) {
-            throw new IllegalArgumentException("herbivores or predators quantity cannot be less than zero");
-        }
-        this.herbivoreCount = (herbivoreCount < MINIMUM_CREATURES) ? DEFAULT_HERBIVORES : herbivoreCount;
-        this.predatorCount = (predatorCount < MINIMUM_CREATURES) ? DEFAULT_PREDATORS : predatorCount;
+    public InitCreatures(CreaturesConfig cfg) {
+        this.cfg = cfg;
+        this.herbivoreCount = cfg.getHerbivoreCount();
+        this.predatorCount = cfg.getPredatorCount();
+        this.herbivoresCapShare = cfg.getHerbivoresCapShare();
+        this.predatorsCapShare = cfg.getPredatorsCapShare();
     }
 
     public InitCreatures() {
-        this(DEFAULT_HERBIVORES, DEFAULT_PREDATORS);
+        this(new CreaturesConfig());
     }
 
     public int getHerbivoreCount() {
@@ -39,10 +35,10 @@ public class InitCreatures implements InitAction {
 
     @Override
     public void initiate(WorldMap map) {
-        int realHerbivoresQuantityToPlace = getRealEntityQuantityToPlace(map, herbivoreCount, HERBIVORES_SHARE_OF_ROOM);
+        int realHerbivoresQuantityToPlace = getRealEntityQuantityToPlace(map, this.herbivoreCount, this.herbivoresCapShare);
         placeRandomEntities(map, realHerbivoresQuantityToPlace, Herbivore::new);
 
-        int realPredatorsQuantityToPlace = getRealEntityQuantityToPlace(map, predatorCount, PREDATORS_SHARE_OF_ROOM);
+        int realPredatorsQuantityToPlace = getRealEntityQuantityToPlace(map, this.predatorCount, this.predatorsCapShare);
         placeRandomEntities(map, realPredatorsQuantityToPlace, Predator::new);
 
         if (realHerbivoresQuantityToPlace < herbivoreCount) {

@@ -10,6 +10,7 @@ import java.util.function.Predicate;
 import static java.util.Collections.emptyList;
 
 public class PathFinder {
+    // private static final Logger log = LoggerFactory.getLogger(PathFinder.class);
 
     private boolean isInsideMap(WorldMap map, Location location) {
         return location.x() >= 0 && location.x() < map.getWidth()
@@ -73,16 +74,17 @@ public class PathFinder {
                                       Location originalLocation, Creature originalCreature,
                                       Predicate<Entity> isTypeOf) {
 
-        Entity originalMovingCreature = map.getEntityByLocation(originalLocation);
-        if (!(originalMovingCreature instanceof Creature)) {
-            throw new IllegalStateException("No creature at originalLocation: " + originalLocation);
-        }
 
+        Entity originalMovingCreature = map.getEntityByLocation(originalLocation);
+
+        if (originalMovingCreature == null) {
+            // TODO: вруби уже логи, дядя! (сейчас оба валятся)
+            // log.debug("Planning from {}: map has null; proceeding with provided start", originalLocation);
+        }
         if (originalMovingCreature != originalCreature) {
-            throw new IllegalStateException(
-                    "originalCreature mismatch at " + originalLocation + ": expected " + originalCreature
-                            + ", found " + originalMovingCreature
-            );
+            // TODO: вруби уже логи, дядя! (сейчас оба валятся)
+            // log.debug("Planning from {}: map has {} (expected {}); proceeding",
+            //           originalLocation, current, originalCreature);
         }
 
         if (isTypeOf.test(originalMovingCreature)) {
@@ -130,6 +132,14 @@ public class PathFinder {
         return new MapAndGoal(cameFrom, null);
     }
 
+    /**
+     * @deprecated Предпочтителен multi-target BFS (что работает значительно быстрей)
+     * работает в связке с
+     * {@link #findClosestPath(WorldMap, Location, Creature, java.util.function.Predicate)}.
+     * который выдает в данный метод конечные координаты КАЖДОЙ сущности (здесь же только начальная точка + конечная)
+     * Оставьте этот метод только для детерминированных тестов с фиксированной целью.
+     */
+    @Deprecated(forRemoval = false)
     public Map<Location, Location> findPath(WorldMap map, Location initialLocation, Location finalLocation) {
         Set<Location> visited = new HashSet<>();
         Queue<Location> queue = new ArrayDeque<>();

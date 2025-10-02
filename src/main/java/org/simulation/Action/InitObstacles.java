@@ -4,30 +4,26 @@ import org.entity.Rock;
 import org.entity.Tree;
 import org.map.WorldMap;
 import org.simulation.InitAction;
+import org.simulation.config.ObstaclesConfig;
 
 public class InitObstacles implements InitAction {
-    private static final int DEFAULT_OBSTACLES = 20;
-    private static final int MINIMUM_OBSTACLES = 10;
-    private static final double OBSTACLES_SHARE_OF_ROOM = 0.2;
-
-
     private final int totalObstacles;
+    private final double capShare;
+    private final ObstaclesConfig cfg;
 
-    public InitObstacles(int totalObstacles) {
-        if (totalObstacles < 0) {
-            throw new IllegalArgumentException("totalObstacles quantity cannot be less than zero");
-        }
-        this.totalObstacles = (totalObstacles < MINIMUM_OBSTACLES) ? DEFAULT_OBSTACLES : totalObstacles;
-
+    public InitObstacles(ObstaclesConfig cfg) {
+        this.cfg = cfg;
+        this.totalObstacles = cfg.getTotalObstacles();
+        this.capShare = cfg.getCapShare();
     }
 
     public InitObstacles() {
-        this(DEFAULT_OBSTACLES);
+        this(new ObstaclesConfig());
     }
 
     @Override
     public void initiate(WorldMap map) {
-        int realObstaclesQuantityToPlace = getRealEntityQuantityToPlace(map, totalObstacles, OBSTACLES_SHARE_OF_ROOM);
+        int realObstaclesQuantityToPlace = getRealEntityQuantityToPlace(map, this.totalObstacles, this.capShare);
 
         if (realObstaclesQuantityToPlace == 0) {
             System.out.printf("[PLACEMENT][Obstacles] requested=%d, placed=0, capLeft=%d%n",

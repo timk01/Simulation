@@ -2,6 +2,7 @@ package org.entity;
 
 import org.map.Location;
 import org.map.WorldMap;
+import org.map.path.PathFinder;
 
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -60,7 +61,7 @@ public abstract class Creature extends Entity {
         return this.hp <= 0 || this.deathReason != null;
     }
 
-    public abstract Location makeMove(WorldMap map, Location location);
+    public abstract Location makeMove(WorldMap map, Location location, PathFinder pathFinder);
 
     public abstract boolean canMoveInto(Entity target);
 

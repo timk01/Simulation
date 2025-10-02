@@ -2,7 +2,10 @@ package org.entity;
 
 import org.map.Location;
 import org.map.WorldMap;
+import org.map.path.MapAndGoal;
+import org.map.path.PathFinder;
 
+import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class Predator extends Creature {
@@ -28,6 +31,7 @@ public class Predator extends Creature {
         super(speed, hp);
         this.attackStrength = attackStrength;
     }
+
     public int getAttackStrength() {
         return attackStrength;
     }
@@ -45,9 +49,9 @@ public class Predator extends Creature {
         return "atk=" + attackStrength;
     }
 
-    private Location tryKill(Location predatorLoc, Location targetLoc, Herbivore herbivore) {
-        if (herbivore.isDead()) {
-            return predatorLoc;
+    private KillResult tryKill(Location predatorLoc, Location targetLoc, Herbivore herbivore) {
+        if (herbivore == null || herbivore.isDead()) {
+            return new KillResult(predatorLoc, false);
         }
 
         int herbivoreHp = herbivore.getHp();
@@ -65,12 +69,17 @@ public class Predator extends Creature {
 
             System.out.printf("[EAT] %s killed %s at %s, gain=%d, hp=%d->%d%n",
                     this, herbivore, targetLoc, killHp, selfBefore, this.getHp());
-            return targetLoc;
+            return new KillResult(targetLoc, true);
         }
-        return predatorLoc;
+        return new KillResult(predatorLoc, false);
     }
 
-    @Override
+    /**
+     * @deprecated Случайное блуждание. Оставлено для совместимости/тестов.
+     * Использовать {@link #makeMove(WorldMap, Location, PathFinder)}, который
+     * умеет блуждать если не нашел цель и идти к ближайшей достижимой цели-травоядному, если таковая достижима.
+     */
+    @Deprecated(forRemoval = false)
     public Location makeMove(WorldMap map, Location location) {
         Location newRandomLocation;
         int turn = 0;
@@ -81,7 +90,7 @@ public class Predator extends Creature {
 
             Entity entityOnNextPoint = map.getEntityByLocation(newRandomLocation);
             if (entityOnNextPoint instanceof Herbivore herbivore) {
-                newRandomLocation = tryKill(location, newRandomLocation, herbivore);
+                newRandomLocation = tryKill(location, newRandomLocation, herbivore).finalLocation();
             } else if (!canMoveInto(entityOnNextPoint)) {
                 newRandomLocation = location;
             } else {
@@ -91,5 +100,64 @@ public class Predator extends Creature {
         } while (turn < speed && isNextMovePossible);
 
         return newRandomLocation;
+    }
+
+    @Override
+    public Location makeMove(WorldMap map, Location initialLocation, PathFinder pathFinder) {
+        Location currentLocation = initialLocation;
+        int stepsLeft = getSpeed();
+
+        do {
+            MapAndGoal closestMapPath =
+                    pathFinder.findClosestPath(map, currentLocation, this, Predator::isLiveHerbivore);
+
+            if (closestMapPath.finalLocation() == null) {
+                Location randomLocation = getRandomLocation(map, currentLocation);
+                if (canMoveInto(map.getEntityByLocation(randomLocation))) {
+                    currentLocation = randomLocation;
+                }
+                break;
+            }
+
+            List<Location> closestPathTillGoal =
+                    pathFinder.reconstructPath(closestMapPath.map(), currentLocation, closestMapPath.finalLocation());
+            if (closestPathTillGoal.isEmpty()) {
+                break;
+            }
+
+            if (closestPathTillGoal.size() == 1) {
+                Entity entity = map.getEntityByLocation(currentLocation);
+                if (entity instanceof Herbivore herbivore) {
+                    Location targetLoc = closestPathTillGoal.get(0);
+                    currentLocation = tryKill(currentLocation, targetLoc, herbivore).finalLocation();
+                    break;
+                }
+            }
+
+            Location nextLocation = closestPathTillGoal.get(1);
+            Entity entityOnNextPoint = map.getEntityByLocation(nextLocation);
+
+            if (entityOnNextPoint instanceof Herbivore herbivore) {
+                KillResult killResult = tryKill(currentLocation, nextLocation, herbivore);
+                currentLocation = killResult.finalLocation();
+                break;
+            }
+
+            if (!canMoveInto(entityOnNextPoint)) {
+                break;
+            }
+
+            currentLocation = nextLocation;
+            stepsLeft--;
+        } while (stepsLeft > 0);
+
+        return currentLocation;
+    }
+
+    public static boolean isLiveHerbivore(Entity e) {
+        return (e instanceof Herbivore h) && h.getHp() > 0 && h.getDeathReason() == null;
+    }
+
+    record KillResult(Location finalLocation, boolean isTargetKilled) {
     }
 }

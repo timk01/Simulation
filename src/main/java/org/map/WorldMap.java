@@ -4,37 +4,39 @@ import org.entity.Entity;
 import org.entity.Grass;
 import org.entity.Rock;
 import org.entity.Tree;
+import org.simulation.config.MapConfig;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class WorldMap {
-    private static final double MAX_OCCUPANCY_RATIO = 0.5;
-    private static final int DEFAULT_WIDTH = 20;
-    private static final int DEFAULT_HEIGHT = 20;
-    private static final int MINIMUM_THRESHOLD = 10;
-
-    private int worldMapVersion;
     private final int width;
     private final int height;
-    private final Map<Location, Entity> cells = new HashMap<>();
+    private final double occupancyRatio;
 
-    public WorldMap(int width, int height) {
-        this.width = (width < MINIMUM_THRESHOLD) ? DEFAULT_WIDTH : width;
-        this.height = (height < MINIMUM_THRESHOLD) ? DEFAULT_HEIGHT : height;
+    private int worldMapVersion;
+    private final Map<Location, Entity> cells;
+    private final MapConfig cfg;
+
+    public WorldMap(MapConfig cfg) {
+        this.cfg = cfg;
+        this.width = cfg.getWidth();
+        this.height = cfg.getHeight();
+        this.occupancyRatio = cfg.getOccupancyRatio();
+        this.cells = new HashMap<>((int) Math.floor(width * height * occupancyRatio));
     }
 
     public WorldMap() {
-        this(DEFAULT_WIDTH, DEFAULT_HEIGHT);
+        this(new MapConfig());
     }
 
     public int getWidth() {
-        return width;
+        return this.width;
     }
 
     public int getHeight() {
-        return height;
+        return this.height;
     }
 
     public int getWorldMapVersion() {
@@ -46,7 +48,7 @@ public class WorldMap {
     }
 
     public int getInitialCapacity() {
-        return width * height;
+        return this.width * this.height;
     }
 
     public int getOccupiedCapacity() {
@@ -55,13 +57,13 @@ public class WorldMap {
 
     public Location getRandomLocation() {
         return new Location(
-                ThreadLocalRandom.current().nextInt(width),
-                ThreadLocalRandom.current().nextInt(height)
+                ThreadLocalRandom.current().nextInt(this.width),
+                ThreadLocalRandom.current().nextInt(this.height)
         );
     }
 
     private int getCap() {
-        return (int) Math.floor(getInitialCapacity() * MAX_OCCUPANCY_RATIO);
+        return (int) Math.floor(getInitialCapacity() * this.occupancyRatio);
     }
 
     public int getRoomLeftUnderCap() {
@@ -92,9 +94,9 @@ public class WorldMap {
         }
     }
 
-    private boolean isInside(Location location) {
+    public boolean isInside(Location location) {
         return location.x() >= 0 && location.y() >= 0
-                && location.x() < width && location.y() < height;
+                && location.x() < this.width && location.y() < this.height;
     }
 
     public Entity getEntityByLocation(Location location) {

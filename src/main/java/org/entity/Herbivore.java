@@ -133,7 +133,12 @@ public class Herbivore extends Creature {
                 || target instanceof Predator);
     }
 
-    @Override
+    /**
+     * @deprecated Случайное блуждание. Оставлено для совместимости/тестов.
+     * Использовать {@link #makeMove(WorldMap, Location, PathFinder)}, который
+     * умеет бежать от хищников и идти к ближайшей достижимой траве.
+     */
+    @Deprecated(forRemoval = false)
     public Location makeMove(WorldMap map, Location location) {
         Location currentLocation = location;
         int turn = 0;
@@ -142,10 +147,9 @@ public class Herbivore extends Creature {
         boolean ate = false;
 
         do {
-//            Location nextLocation = getRandomLocation(map, currentLocation);
-
             Location nextLocation = getRandomLocation(map, currentLocation);
             Entity entityOnNextPoint = map.getEntityByLocation(nextLocation);
+
             if (entityOnNextPoint instanceof Predator) {
                 Location escapeLocation = tryRunAway(map, currentLocation, nextLocation);
 
@@ -169,7 +173,13 @@ public class Herbivore extends Creature {
         return currentLocation;
     }
 
-    @Deprecated(since = "BFT findClosestPath that uses search for multi-targets is much effective, use getFirstLocation + findPath for tests only")
+    /**
+     * @deprecated Использовать multi-target поиск!:
+     * {@link PathFinder#findClosestPath(WorldMap, Location, Creature, java.util.function.Predicate)}
+     * + {@link PathFinder#reconstructPath(Map, Location, Location)} (Map, Location, Location)}.
+     * Этот же метод делает BFS к КАЖДОЙ травинке и неэффективен.
+     */
+    @Deprecated(forRemoval = false)
     private Location getFirstLocation(WorldMap map, Location location, PathFinder pathFinder) {
         Location currentLocation = location;
         List<Map.Entry<Location, Entity>> grassList = map.getCells().entrySet().stream()
@@ -208,6 +218,7 @@ public class Herbivore extends Creature {
         return null;
     }
 
+    @Override
     public Location makeMove(WorldMap map, Location initialLocation, PathFinder pathFinder) {
         Location currentLocation = initialLocation;
         int stepsLeft = getSpeed();

@@ -3,9 +3,12 @@ package org.simulation;
 import org.entity.Herbivore;
 import org.entity.Predator;
 import org.map.WorldMap;
+import org.map.path.PathFinder;
 import org.simulation.Action.*;
+import org.simulation.config.*;
 
 import java.util.List;
+import java.util.Map;
 
 public class Simulation {
 
@@ -63,9 +66,20 @@ public class Simulation {
     }
 
     public static void main(String[] args) throws InterruptedException {
-        WorldMap worldMap = new WorldMap(20, 20);
-        Renderer renderer = new Renderer(worldMap);
+        MapConfig mapConfig = new MapConfig(20, 20, 0.6);
+        GrassConfig grassConfig = new GrassConfig();
+        ObstaclesConfig obstaclesConfig = new ObstaclesConfig();
+        CreaturesConfig creaturesConfig = new CreaturesConfig();
+        SimulationConfig simulationConfig = new SimulationConfig(
+                mapConfig,
+                grassConfig,
+                obstaclesConfig,
+                creaturesConfig
+        );
 
+        WorldMap worldMap = new WorldMap(simulationConfig.getMapConfig());
+        Renderer renderer = new Renderer(worldMap);
+        PathFinder pathFinder = new PathFinder();
 
         List<InitAction> initActions = List.of(
                 new InitGrass(),
@@ -76,7 +90,7 @@ public class Simulation {
 
         List<TurnAction> turnActions = List.of(
                 new TickAction(statistic),
-                new MoveCreatures(statistic),
+                new MoveCreatures(statistic, pathFinder),
                 new FlushGrassEatenAction(),
                 new CleanDeadAction(statistic),
                 new GrowGrass()
