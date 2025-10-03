@@ -8,7 +8,7 @@ import java.util.Map;
 
 public class MapConfig {
     private static final double MAX_OCCUPANCY_RATIO = 0.75;
-    private static final double DEFAULT_OCCUPANCY_RATIO = 0.6;
+    private static final double DEFAULT_OCCUPANCY_RATIO = 0.65;
     private static final int DEFAULT_WIDTH = 20;
     private static final int DEFAULT_HEIGHT = 20;
     private static final int MINIMUM_THRESHOLD = 10;

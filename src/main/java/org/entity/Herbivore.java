@@ -11,8 +11,8 @@ import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class Herbivore extends Creature {
-    private static final int MIN_SPEED = 1;
-    private static final int MAX_SPEED = 3;
+    private static final int MIN_SPEED = 2;
+    private static final int MAX_SPEED = 4;
     private static final int MIN_HP = 10;
     private static final int MAX_HP = 20;
 

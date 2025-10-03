@@ -1,17 +1,20 @@
 package org.entity;
 
+import java.util.concurrent.ThreadLocalRandom;
+
 public class Grass extends StaticEntity {
-    public static final int DEFAULT_NUTRITION = 10;
+    private static final int MIN_NUTRITION = 7;
+    private static final int MAX_NUTRITION = 12;
 
     private int nutrition;
     private Herbivore eatenBy;
 
     public Grass() {
-        this(DEFAULT_NUTRITION);
+        this.nutrition = ThreadLocalRandom.current().nextInt(MAX_NUTRITION - MIN_NUTRITION + 1) + MIN_NUTRITION;
     }
 
     public Grass(int nutrition) {
-        this.nutrition = Math.max(DEFAULT_NUTRITION, nutrition);
+        this.nutrition = Math.min(MAX_NUTRITION, Math.max(nutrition, MIN_NUTRITION));
     }
 
     public int getNutrition() {
@@ -19,7 +22,7 @@ public class Grass extends StaticEntity {
     }
 
     public void setNutrition(int nutrition) {
-        this.nutrition = Math.max(DEFAULT_NUTRITION, nutrition);
+        this.nutrition = Math.min(MAX_NUTRITION, Math.max(nutrition, MIN_NUTRITION));
     }
 
     public Herbivore getEatenBy() {

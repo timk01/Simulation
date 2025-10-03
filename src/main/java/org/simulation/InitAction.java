@@ -4,8 +4,10 @@ import org.entity.Entity;
 import org.map.Location;
 import org.map.WorldMap;
 
-import java.util.Random;
-import java.util.function.Function;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Supplier;
 
 public interface InitAction {
@@ -13,22 +15,25 @@ public interface InitAction {
 
     default void placeRandomEntities(WorldMap map, int count,
                                      Supplier<? extends Entity> factory) {
+        int needToPlace = Math.min(count, map.getFreeCapacity());
+        if (needToPlace <= 0) {
+            return;
+        }
+
+        List<Location> emptyLocations = map.listEmptyLocationsShuffled();
+
         int placed = 0;
-        while (placed < count) {
-            Location loc = map.getRandomLocation();
-            if (!map.checkLocation(loc)) {
-                map.placeEntity(loc, factory.get());
-                placed++;
-            }
+        for (int i = 0; i < emptyLocations.size() && placed < needToPlace; i++) {
+            map.placeEntity(emptyLocations.get(i), factory.get());
+            placed++;
         }
     }
 
     default int getRealEntityQuantityToPlace(WorldMap map, int requestedRoom, double share) {
-        int roomLeft = map.getRoomLeftUnderCap();
-        int allowedByCap = (int) Math.ceil(roomLeft * share);
-        if (allowedByCap == 0 && roomLeft > 0 && requestedRoom > 0) {
-            allowedByCap = 1;
-        }
-        return Math.min(requestedRoom, allowedByCap);
+        int initialCapacity = map.getInitialCapacity();
+        int perTypeCap = (int) Math.floor(initialCapacity * share);
+        int allowedByType = Math.max(0, perTypeCap); 
+        int allowedByMap = map.getRoomLeftUnderCap();
+        return Math.min(requestedRoom, Math.min(allowedByType, allowedByMap));
     }
 }

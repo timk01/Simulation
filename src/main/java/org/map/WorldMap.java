@@ -6,8 +6,7 @@ import org.entity.Rock;
 import org.entity.Tree;
 import org.simulation.config.MapConfig;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class WorldMap {
@@ -121,4 +120,24 @@ public class WorldMap {
     private boolean relevantForMapPath(Entity e) {
         return e instanceof Rock || e instanceof Tree || e instanceof Grass;
     }
+
+    public List<Location> listEmptyLocations() {
+        List<Location> empty = new ArrayList<>();
+        for (int y = 0; y < getHeight(); y++) {
+            for (int x = 0; x < getWidth(); x++) {
+                Location loc = new Location(x, y);
+                if (!checkLocation(loc)) {
+                    empty.add(loc);
+                }
+            }
+        }
+        return empty;
+    }
+
+    public List<Location> listEmptyLocationsShuffled() {
+        List<Location> empty = listEmptyLocations();
+        Collections.shuffle(empty, ThreadLocalRandom.current());
+        return empty;
+    }
 }
+

@@ -1,14 +1,15 @@
 package org.simulation;
 
-import org.entity.Herbivore;
-import org.entity.Predator;
 import org.map.WorldMap;
 import org.map.path.PathFinder;
 import org.simulation.Action.*;
 import org.simulation.config.*;
+import org.simulation.config.preset.CreaturesPreset;
+import org.simulation.config.preset.GrassPreset;
+import org.simulation.config.preset.MapPreset;
+import org.simulation.config.preset.ObstaclesPreset;
 
 import java.util.List;
-import java.util.Map;
 
 public class Simulation {
 
@@ -66,25 +67,21 @@ public class Simulation {
     }
 
     public static void main(String[] args) throws InterruptedException {
-        MapConfig mapConfig = new MapConfig(20, 20, 0.6);
-        GrassConfig grassConfig = new GrassConfig();
-        ObstaclesConfig obstaclesConfig = new ObstaclesConfig();
-        CreaturesConfig creaturesConfig = new CreaturesConfig();
-        SimulationConfig simulationConfig = new SimulationConfig(
-                mapConfig,
-                grassConfig,
-                obstaclesConfig,
-                creaturesConfig
-        );
+        SimulationConfig config = new SimulationPreset(
+                GrassPreset.MEDIUM,
+                ObstaclesPreset.MEDIUM,
+                CreaturesPreset.MEDIUM,
+                MapPreset.MEDIUM
+        ).toConfig();
 
-        WorldMap worldMap = new WorldMap(simulationConfig.getMapConfig());
+        WorldMap worldMap = new WorldMap(config.getMapConfig());
         Renderer renderer = new Renderer(worldMap);
         PathFinder pathFinder = new PathFinder();
 
         List<InitAction> initActions = List.of(
-                new InitGrass(),
-                new InitObstacles(),
-                new InitCreatures()
+                new InitGrass(config.getGrassConfig()),
+                new InitObstacles(config.getObstaclesConfig()),
+                new InitCreatures(config.getCreaturesConfig())
         );
         Statistic statistic = new Statistic();
 
@@ -93,7 +90,7 @@ public class Simulation {
                 new MoveCreatures(statistic, pathFinder),
                 new FlushGrassEatenAction(),
                 new CleanDeadAction(statistic),
-                new GrowGrass()
+                new GrowGrass(config.getGrassConfig())
         );
 
         List<FinishAction> finishActions = List.of(
@@ -114,7 +111,7 @@ public class Simulation {
 
         boolean running = true;
         while (running) {
-            Thread.sleep(150);
+            Thread.sleep(500);
             simulation.nextTurn();
             //statistic.printConsistencyCheck(worldMap);
             renderer.render(worldMap, simulation.getMoves(), statistic);
@@ -124,5 +121,42 @@ public class Simulation {
         }
 
         simulation.finishSimulation();
+    }
+
+    record SimulationPreset(GrassPreset grass, ObstaclesPreset obstacles, CreaturesPreset creatures, MapPreset map) {
+        public SimulationPreset {
+        }
+
+        SimulationConfig toConfig() {
+            MapConfig mapCfg = map.toConfig();
+            GrassConfig grassCfg = grass.toConfig();
+            ObstaclesConfig obstCfg = obstacles.toConfig();
+            CreaturesConfig creatCfg = creatures.toConfig();
+
+            checkMapShares(grassCfg, obstCfg, creatCfg, mapCfg);
+
+            return new SimulationConfig(map.toConfig(), grass.toConfig(), obstacles.toConfig(), creatures.toConfig());
+        }
+
+        private static void checkMapShares(
+                GrassConfig grassConfig,
+                ObstaclesConfig obstaclesConfig,
+                CreaturesConfig creaturesConfig,
+                MapConfig mapConfig
+        ) {
+            double grassShare = grassConfig.getCapShare();
+            double obstShare  = obstaclesConfig.getCapShare();
+            double herbShare  = creaturesConfig.getHerbivoresCapShare();
+            double predShare  = creaturesConfig.getPredatorsCapShare();
+            double shareSum = grassShare + obstShare + herbShare + predShare;
+            if (shareSum > mapConfig.getOccupancyRatio()) {
+                throw new IllegalArgumentException(String.format(
+                        "Выбранные лимиты не помещаются на карту. " +
+                                "Уменьшите любую из долей И/ИЛИ увеличьте карту:" +
+                                " трава=%.2f, препятствия=%.2f, травоядные=%.2f, хищники=%.2f (сумма=%.2f).",
+                        grassShare, obstShare, herbShare, predShare, shareSum
+                ));
+            }
+        }
     }
 }

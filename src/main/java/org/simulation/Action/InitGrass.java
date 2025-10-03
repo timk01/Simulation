@@ -13,7 +13,7 @@ public class InitGrass implements InitAction {
     public InitGrass(GrassConfig cfg) {
         this.cfg = cfg;
         this.grassCount = cfg.getGrassCount();
-        this.capShare = cfg.getOccupancyRatio();
+        this.capShare = cfg.getCapShare();
     }
 
     public InitGrass() {
@@ -29,5 +29,17 @@ public class InitGrass implements InitAction {
             System.out.printf("[PLACEMENT][Grass] requested=%d, placed=%d, capLeft=%d%n",
                     grassCount, realGrassQuantityToPlace, map.getRoomLeftUnderCap());
         }
+    }
+
+    public int getGrassCount() {
+        return grassCount;
+    }
+
+    public double getCapShare() {
+        return capShare;
+    }
+
+    public GrassConfig getCfg() {
+        return cfg;
     }
 }

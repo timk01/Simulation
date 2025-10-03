@@ -14,12 +14,14 @@ import java.util.Objects;
 public class Renderer {
 
     private final Map<Class<? extends Entity>, Icon> icons = new HashMap<>();
-    private final int cellSize;
+    private int cellSize;
     private final JLabel[][] cells;
     private final JFrame jFrame;
     private final JPanel gridPanel;
+    private JScrollPane scroll;
     private final JLabel herbivoreCountLabel;
     private final JLabel predatorCountLabel;
+    private final JLabel grassCountLabel;
     private final JLabel turnLabel;
 
     private final JLabel starvedHerbivoresLabel;
@@ -31,6 +33,14 @@ public class Renderer {
         ImageIcon icon = new ImageIcon(Objects.requireNonNull(getClass().getResource(path)));
         Image scaled = icon.getImage().getScaledInstance(cellSize, cellSize, Image.SCALE_SMOOTH);
         return new ImageIcon(scaled);
+    }
+
+    private void reloadIcons() {
+        icons.put(Grass.class, loadIcon("/icons/grass.png"));
+        icons.put(Rock.class, loadIcon("/icons/rock.png"));
+        icons.put(Tree.class, loadIcon("/icons/tree.png"));
+        icons.put(Herbivore.class, loadIcon("/icons/herbivore.png"));
+        icons.put(Predator.class, loadIcon("/icons/predator.png"));
     }
 
     private void initGrid(WorldMap map) {
@@ -47,6 +57,42 @@ public class Renderer {
         }
     }
 
+    private void addZoomControls() {
+        JPanel zoomPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 0));
+        JButton minus = new JButton("−");
+        JButton plus = new JButton("+");
+
+        minus.addActionListener(e -> setCellSize(cellSize - 4));
+        plus.addActionListener(e -> setCellSize(cellSize + 4));
+
+        zoomPanel.add(new JLabel("Zoom:"));
+        zoomPanel.add(minus);
+        zoomPanel.add(plus);
+
+        jFrame.add(zoomPanel, BorderLayout.NORTH);
+    }
+
+    private void setCellSize(int newSize) {
+        int clamped = Math.max(8, Math.min(64, newSize));
+        if (clamped == cellSize) return;
+
+        cellSize = clamped;
+
+        for (JLabel[] row : cells) {
+            for (JLabel lbl : row) {
+                lbl.setPreferredSize(new Dimension(cellSize, cellSize));
+            }
+        }
+
+        reloadIcons();
+
+        gridPanel.revalidate();
+        gridPanel.repaint();
+        scroll.getVerticalScrollBar().setUnitIncrement(cellSize);
+        scroll.getHorizontalScrollBar().setUnitIncrement(cellSize);
+        jFrame.pack();
+    }
+
     public Renderer(WorldMap map) {
         this.cellSize = 32;
         this.cells = new JLabel[map.getHeight()][map.getWidth()];
@@ -56,7 +102,12 @@ public class Renderer {
         jFrame.setLayout(new BorderLayout());
 
         gridPanel = new JPanel(new GridLayout(map.getHeight(), map.getWidth()));
-        jFrame.add(gridPanel);
+        scroll = new JScrollPane(gridPanel,
+                ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
+                ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        scroll.getVerticalScrollBar().setUnitIncrement(cellSize);
+        scroll.getHorizontalScrollBar().setUnitIncrement(cellSize);
+        jFrame.add(scroll, BorderLayout.CENTER);
 
         JPanel statsPanel = new JPanel();
         statsPanel.setLayout(new BoxLayout(statsPanel, BoxLayout.Y_AXIS));
@@ -64,15 +115,19 @@ public class Renderer {
         JPanel row1 = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
         herbivoreCountLabel = new JLabel("Herbivores: 0");
         predatorCountLabel = new JLabel("Predators: 0");
+        grassCountLabel = new JLabel("Grass: 0");
         turnLabel = new JLabel("Turn: 0");
 
         JLabel sep1 = new JLabel("  |  ");
         JLabel sep2 = new JLabel("  |  ");
+        JLabel sep3 = new JLabel("  |  ");
 
         row1.add(herbivoreCountLabel);
         row1.add(sep1);
         row1.add(predatorCountLabel);
         row1.add(sep2);
+        row1.add(grassCountLabel);
+        row1.add(sep3);
         row1.add(turnLabel);
 
         JPanel row2 = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
@@ -94,13 +149,11 @@ public class Renderer {
 
         jFrame.add(statsPanel, BorderLayout.SOUTH);
 
-        icons.put(Grass.class, loadIcon("/icons/grass.png"));
-        icons.put(Rock.class, loadIcon("/icons/rock.png"));
-        icons.put(Tree.class, loadIcon("/icons/tree.png"));
-        icons.put(Herbivore.class, loadIcon("/icons/herbivore.png"));
-        icons.put(Predator.class, loadIcon("/icons/predator.png"));
+        reloadIcons();
 
         initGrid(map);
+
+        addZoomControls();
 
         jFrame.pack();
         jFrame.setVisible(true);
@@ -132,9 +185,13 @@ public class Renderer {
         int predatorCount = (int) map.getCells().values().stream()
                 .filter(e -> e instanceof Predator)
                 .count();
+        int grassCount = (int) map.getCells().values().stream()
+                .filter(e -> e instanceof Grass)
+                .count();
 
         herbivoreCountLabel.setText("Herbivores: " + herbivoreCount);
         predatorCountLabel.setText("Predators: " + predatorCount);
+        grassCountLabel.setText("Grass: " + grassCount);
         turnLabel.setText("Turn: " + turn);
     }
 
