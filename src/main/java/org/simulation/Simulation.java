@@ -9,12 +9,14 @@ import org.simulation.config.preset.GrassPreset;
 import org.simulation.config.preset.MapPreset;
 import org.simulation.config.preset.ObstaclesPreset;
 
+import javax.swing.*;
 import java.util.List;
 
-public class Simulation {
+public class Simulation implements Runnable {
 
     private final WorldMap map;
     private final Statistic statistic;
+
 
     private int moves;
 
@@ -22,17 +24,23 @@ public class Simulation {
     private final List<InitAction> oneTimeActions;
     private final List<TurnAction> eachTurnActions;
     private final List<FinishAction> finishActions;
+    private final Controller controller;
+    private volatile boolean running = true;
 
-    public Simulation(WorldMap map, Renderer renderer,
-                      List<InitAction> init, List<TurnAction> turn, List<FinishAction> finishActions,
-                      Statistic statistic) {
+    public Simulation(WorldMap map,
+                      Renderer renderer,
+                      Statistic statistic,
+                      List<InitAction> oneTimeActions,
+                      List<TurnAction> eachTurnActions,
+                      List<FinishAction> finishActions,
+                      Controller controller) {
         this.map = map;
-        this.renderer = renderer;
-        this.oneTimeActions = init;
-        this.eachTurnActions = turn;
-        this.finishActions = finishActions;
         this.statistic = statistic;
-        this.moves = 0;
+        this.renderer = renderer;
+        this.oneTimeActions = oneTimeActions;
+        this.eachTurnActions = eachTurnActions;
+        this.finishActions = finishActions;
+        this.controller = controller;
     }
 
     public int getMoves() {
@@ -63,7 +71,12 @@ public class Simulation {
     }
 
     public void pauseSimulation() {
+        controller.pause();
+    }
 
+    public void stop() {
+        running = false;
+        controller.resume();
     }
 
     public static void main(String[] args) throws InterruptedException {
@@ -97,30 +110,75 @@ public class Simulation {
                 new ShowReportAction(statistic)
         );
 
+        Controller controller = new Controller();
         Simulation simulation = new Simulation(
                 worldMap,
                 renderer,
+                statistic,
                 initActions,
                 turnActions,
                 finishActions,
-                statistic
+                controller
         );
 
-        simulation.startSimulation();
-        renderer.render(worldMap, simulation.getMoves(), statistic);
+        Thread t = new Thread(simulation);
 
-        boolean running = true;
+        t.start();
+
+        simulation.pauseSimulation();
+        //controller.pause();
+        controller.oneMoreMove();
+        controller.oneMoreMove();
+        controller.resume();
+
+        t.join();
+    }
+
+    private void getRender() {
+        SwingUtilities.invokeLater(
+                () -> renderer.render(map, moves, statistic)
+        );
+    }
+
+    @Override
+    public void run() {
+        startSimulation();
+        getRender();
+
         while (running) {
-            Thread.sleep(500);
-            simulation.nextTurn();
-            //statistic.printConsistencyCheck(worldMap);
-            renderer.render(worldMap, simulation.getMoves(), statistic);
-            if (simulation.moves >= 30) {
+            try {
+                controller.awaitPermission();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+
+
+            nextTurn();
+
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+
+            moves++;
+            getRender();
+/*
+            if(true) { //как будто лочит БЕЗ команды со стороны
+                pauseSimulation();
+            }
+
+            if(true) { //польователь дал команду продолжать дальше
+                controller.oneMoreMove();
+            }*/
+
+            if (moves >= 30) {
                 running = false;
             }
         }
 
-        simulation.finishSimulation();
+        finishSimulation();
     }
 
     record SimulationPreset(GrassPreset grass, ObstaclesPreset obstacles, CreaturesPreset creatures, MapPreset map) {
