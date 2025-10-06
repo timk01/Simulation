@@ -12,7 +12,7 @@ public class ObstaclesConfig {
 
     public ObstaclesConfig(int totalObstacles, double occupancyRatio) {
         if (totalObstacles < 0) {
-            throw new IllegalArgumentException("totalObstacles quantity cannot be less than zero");
+            throw new IllegalArgumentException("totalObstacles quantity cannot be less than zero " + totalObstacles);
         }
         this.totalObstacles = (totalObstacles < MINIMUM_OBSTACLES) ? DEFAULT_OBSTACLES : totalObstacles;
         this.capShare = (occupancyRatio <= 0 || occupancyRatio > OBSTACLES_MAX_OCCUPANCY_RATIO) ?

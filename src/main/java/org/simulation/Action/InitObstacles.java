@@ -5,8 +5,13 @@ import org.entity.Tree;
 import org.map.WorldMap;
 import org.simulation.InitAction;
 import org.simulation.config.ObstaclesConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class InitObstacles implements InitAction {
+    private static final Logger log = LoggerFactory.getLogger(InitObstacles.class);
+
+
     private final int totalObstacles;
     private final double capShare;
     private final ObstaclesConfig cfg;
@@ -26,7 +31,7 @@ public class InitObstacles implements InitAction {
         int realObstaclesQuantityToPlace = getRealEntityQuantityToPlace(map, this.totalObstacles, this.capShare);
 
         if (realObstaclesQuantityToPlace == 0) {
-            System.out.printf("[PLACEMENT][Obstacles] requested=%d, placed=0, capLeft=%d%n",
+            log.info("[PLACEMENT][Obstacles] is zero: requested={}, placed=0, capLeft={}",
                     totalObstacles, map.getRoomLeftUnderCap());
             return;
         }
@@ -37,7 +42,7 @@ public class InitObstacles implements InitAction {
         int treesToPlace = realObstaclesQuantityToPlace / 2;
         placeRandomEntities(map, treesToPlace, Tree::new);
         if (realObstaclesQuantityToPlace < totalObstacles) {
-            System.out.printf("[PLACEMENT][Obstacles] requested=%d, placed=%d, capLeft=%d%n",
+            log.warn("[PLACEMENT][Obstacles] truncated by cap: requested={}, placed={}, capLeft={}",
                     totalObstacles, realObstaclesQuantityToPlace, map.getRoomLeftUnderCap());
         }
     }

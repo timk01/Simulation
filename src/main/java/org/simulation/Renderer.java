@@ -4,14 +4,17 @@ import org.entity.*;
 import org.map.Location;
 import org.map.WorldMap;
 import org.simulation.Action.Statistic;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 public class Renderer {
+    private static final Logger log = LoggerFactory.getLogger(Renderer.class);
+
 
     private final Map<Class<? extends Entity>, Icon> icons = new HashMap<>();
     private int cellSize;
@@ -28,9 +31,18 @@ public class Renderer {
     private final JLabel starvedPredatorsLabel;
     private final JLabel killedByPredatorsLabel;
     private final JLabel grassEatenTotalLabel;
+    private Runnable onClose;
+
+    public void setOnClose(Runnable onClose) {
+        this.onClose = onClose;
+    }
 
     private ImageIcon loadIcon(String path) {
-        ImageIcon icon = new ImageIcon(Objects.requireNonNull(getClass().getResource(path)));
+        java.net.URL url = getClass().getResource(path);
+        if (url == null) {
+            throw new IllegalStateException("Missing icon resource: " + path);
+        }
+        ImageIcon icon = new ImageIcon(url);
         Image scaled = icon.getImage().getScaledInstance(cellSize, cellSize, Image.SCALE_SMOOTH);
         return new ImageIcon(scaled);
     }
@@ -74,7 +86,9 @@ public class Renderer {
 
     private void setCellSize(int newSize) {
         int clamped = Math.max(8, Math.min(64, newSize));
-        if (clamped == cellSize) return;
+        if (clamped == cellSize) {
+            return;
+        }
 
         cellSize = clamped;
 
@@ -98,7 +112,7 @@ public class Renderer {
         this.cells = new JLabel[map.getHeight()][map.getWidth()];
 
         jFrame = new JFrame("Simulation");
-        jFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        jFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         jFrame.setLayout(new BorderLayout());
 
         gridPanel = new JPanel(new GridLayout(map.getHeight(), map.getWidth()));
@@ -156,7 +170,30 @@ public class Renderer {
         addZoomControls();
 
         jFrame.pack();
+        jFrame.setAutoRequestFocus(false);
+        dockRightSide();
+        jFrame.setAlwaysOnTop(true);
         jFrame.setVisible(true);
+        log.info("Renderer window created: map {}x{}, cellSize={}, bounds={}",
+                map.getWidth(), map.getHeight(), cellSize, jFrame.getBounds());
+
+        jFrame.addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosing(java.awt.event.WindowEvent e) {
+                log.info("Renderer windowClosing event");
+                if (onClose != null) {
+                    onClose.run();
+                }
+            }
+        });
+    }
+
+    private void dockRightSide() {
+        Rectangle s = GraphicsEnvironment.getLocalGraphicsEnvironment()
+                .getMaximumWindowBounds();
+        int w = Math.min(jFrame.getWidth(), s.width / 2);
+        int h = Math.min(jFrame.getHeight(), s.height - 40);
+        jFrame.setBounds(s.x + s.width - w, s.y + 20, w, h);
     }
 
     private void cleanBoard() {
@@ -210,6 +247,13 @@ public class Renderer {
         updateStats(stat);
 
         gridPanel.repaint();
+
+        log.debug("Render frame: turn={}", turn);
+    }
+
+    public void dispose() {
+        log.info("Renderer dispose requested");
+        SwingUtilities.invokeLater(jFrame::dispose);
     }
 
     public void showResults(
@@ -223,33 +267,27 @@ public class Renderer {
             Map<String, Integer> killsByPredator,
             Map<String, Integer> grassEatenByHerbivore
     ) {
-        System.out.println("==== SIMULATION REPORT ====");
+        log.info("==== SIMULATION REPORT ====");
+        log.info("Herbivores: init={}, left={}, starved={}, killedByPredator={}",
+                initialHerbivores, herbivoresLeft, starvedHerbivores, killedByPredator);
+        log.info("Predators: init={}, left={}, starved={}",
+                initialPredators, predatorsLeft, starvedPredators);
 
-        System.out.println("Herbivores: init=" + initialHerbivores
-                + ", left=" + herbivoresLeft
-                + ", starved=" + starvedHerbivores
-                + ", killedByPredator=" + killedByPredator);
-
-        System.out.println("Predators: init=" + initialPredators
-                + ", left=" + predatorsLeft
-                + ", starved=" + starvedPredators);
-
-        System.out.println("--- Predator kills ---");
+        log.info("--- Predator kills ---");
         if (killsByPredator.isEmpty()) {
-            System.out.println("none");
+            log.info("none");
         } else {
             killsByPredator.forEach((id, kills) ->
-                    System.out.println(id + " killed " + kills + " herbivores"));
+                    log.info("{} killed {} herbivores", id, kills));
         }
 
-        System.out.println("--- Herbivores eaten grass ---");
+        log.info("--- Herbivores eaten grass ---");
         if (grassEatenByHerbivore.isEmpty()) {
-            System.out.println("none");
+            log.info("none");
         } else {
             grassEatenByHerbivore.forEach((id, count) ->
-                    System.out.println(id + " ate " + count + " grasses"));
+                    log.info("{} ate {} grasses", id, count));
         }
-
-        System.out.println("===========================");
+        log.info("===========================");
     }
 }

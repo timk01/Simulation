@@ -5,6 +5,12 @@ public class Controller {
     private boolean isStepRequired;
     private final Object lock = new Object();
 
+    public boolean isPaused() {
+        synchronized (lock) {
+            return isPaused;
+        }
+    }
+
     public void pause() {
         synchronized (lock) {
             isPaused = true;
@@ -27,15 +33,15 @@ public class Controller {
         }
     }
 
-public void awaitPermission() throws InterruptedException {
-    synchronized (lock) {
-        while (isPaused && !isStepRequired) {
-            lock.wait();
-        }
+    public void awaitPermission() throws InterruptedException {
+        synchronized (lock) {
+            while (isPaused && !isStepRequired) {
+                lock.wait();
+            }
 
-        if (isStepRequired) {
-            isStepRequired = false;
+            if (isStepRequired) {
+                isStepRequired = false;
+            }
         }
     }
-}
 }

@@ -14,7 +14,7 @@ public class GrassConfig {
 
     public GrassConfig(int grassCount, double occupancyRatio) {
         if (grassCount < 0) {
-            throw new IllegalArgumentException("grass quantity cannot be less than zero");
+            throw new IllegalArgumentException("grass quantity cannot be less than zero " + grassCount);
         }
         this.grassCount = (grassCount < MINIMUM_GRASS) ? DEFAULT_GRASS : grassCount;
         this.capShare = (occupancyRatio <= 0 || occupancyRatio > GRASS_MAX_OCCUPANCY_RATIO) ?

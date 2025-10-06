@@ -3,10 +3,16 @@ package org.simulation.Action;
 import org.entity.Herbivore;
 import org.entity.Predator;
 import org.map.WorldMap;
+import org.map.path.PathFinder;
 import org.simulation.InitAction;
 import org.simulation.config.CreaturesConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class InitCreatures implements InitAction {
+    private static final Logger log = LoggerFactory.getLogger(InitCreatures.class);
+
+
     private final int herbivoreCount;
     private final int predatorCount;
     private final double herbivoresCapShare;
@@ -42,11 +48,11 @@ public class InitCreatures implements InitAction {
         placeRandomEntities(map, realPredatorsQuantityToPlace, Predator::new);
 
         if (realHerbivoresQuantityToPlace < herbivoreCount) {
-            System.out.printf("[PLACEMENT][Herbivores] requested=%d, placed=%d, capLeft=%d%n",
+            log.warn("[PLACEMENT][Herbivores] truncated by cap: requested={}, placed={}, capLeft={}",
                     herbivoreCount, realHerbivoresQuantityToPlace, map.getRoomLeftUnderCap());
         }
         if (realPredatorsQuantityToPlace < predatorCount) {
-            System.out.printf("[PLACEMENT][Predators] requested=%d, placed=%d, capLeft=%d%n",
+            log.warn("[PLACEMENT][Predators] truncated by cap: requested={}, placed={}, capLeft={}",
                     predatorCount, realPredatorsQuantityToPlace, map.getRoomLeftUnderCap());
         }
     }

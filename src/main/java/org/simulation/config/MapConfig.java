@@ -1,11 +1,5 @@
 package org.simulation.config;
 
-import org.entity.Entity;
-import org.map.Location;
-
-import java.util.HashMap;
-import java.util.Map;
-
 public class MapConfig {
     private static final double MAX_OCCUPANCY_RATIO = 0.75;
     private static final double DEFAULT_OCCUPANCY_RATIO = 0.65;

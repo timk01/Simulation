@@ -4,8 +4,13 @@ import org.entity.Grass;
 import org.map.WorldMap;
 import org.simulation.InitAction;
 import org.simulation.config.GrassConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class InitGrass implements InitAction {
+    private static final Logger log = LoggerFactory.getLogger(InitGrass.class);
+
+
     private final int grassCount;
     private final double capShare;
     private final GrassConfig cfg;
@@ -26,7 +31,7 @@ public class InitGrass implements InitAction {
 
         placeRandomEntities(map, realGrassQuantityToPlace, Grass::new);
         if (realGrassQuantityToPlace < grassCount) {
-            System.out.printf("[PLACEMENT][Grass] requested=%d, placed=%d, capLeft=%d%n",
+            log.warn("[PLACEMENT][Grass] truncated by cap: requested={}, placed={}, capLeft={}",
                     grassCount, realGrassQuantityToPlace, map.getRoomLeftUnderCap());
         }
     }

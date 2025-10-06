@@ -1,7 +1,5 @@
 package org.simulation.config;
 
-import org.entity.Grass;
-
 public class SimulationConfig {
     private final MapConfig mapConfig;
     private final GrassConfig grassConfig;

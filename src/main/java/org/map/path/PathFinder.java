@@ -3,6 +3,8 @@ package org.map.path;
 import org.entity.*;
 import org.map.Location;
 import org.map.WorldMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.function.Predicate;
@@ -10,7 +12,7 @@ import java.util.function.Predicate;
 import static java.util.Collections.emptyList;
 
 public class PathFinder {
-    // private static final Logger log = LoggerFactory.getLogger(PathFinder.class);
+    private static final Logger log = LoggerFactory.getLogger(PathFinder.class);
 
     private boolean isInsideMap(WorldMap map, Location location) {
         return location.x() >= 0 && location.x() < map.getWidth()
@@ -78,13 +80,13 @@ public class PathFinder {
         Entity originalMovingCreature = map.getEntityByLocation(originalLocation);
 
         if (originalMovingCreature == null) {
-            // TODO: вруби уже логи, дядя! (сейчас оба валятся)
-            // log.debug("Planning from {}: map has null; proceeding with provided start", originalLocation);
+            log.warn("findClosestPath: at {} map has null; proceeding with provided start (creature={})",
+                    originalLocation, originalCreature);
         }
+
         if (originalMovingCreature != originalCreature) {
-            // TODO: вруби уже логи, дядя! (сейчас оба валятся)
-            // log.debug("Planning from {}: map has {} (expected {}); proceeding",
-            //           originalLocation, current, originalCreature);
+             log.warn("Planning from {}: map has {} (expected {}); proceeding",
+                       originalLocation, originalMovingCreature, originalCreature);
         }
 
         if (isTypeOf.test(originalMovingCreature)) {

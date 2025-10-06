@@ -8,32 +8,35 @@ import org.simulation.config.preset.CreaturesPreset;
 import org.simulation.config.preset.GrassPreset;
 import org.simulation.config.preset.MapPreset;
 import org.simulation.config.preset.ObstaclesPreset;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.util.List;
 
 public class Simulation implements Runnable {
+    private static final Logger log = LoggerFactory.getLogger(Simulation.class);
 
     private final WorldMap map;
     private final Statistic statistic;
 
-
     private int moves;
-
     private final Renderer renderer;
     private final List<InitAction> oneTimeActions;
     private final List<TurnAction> eachTurnActions;
     private final List<FinishAction> finishActions;
     private final Controller controller;
+    private final SimulationSettings settings;
     private volatile boolean running = true;
 
     public Simulation(WorldMap map,
-                      Renderer renderer,
                       Statistic statistic,
+                      Renderer renderer,
                       List<InitAction> oneTimeActions,
                       List<TurnAction> eachTurnActions,
                       List<FinishAction> finishActions,
-                      Controller controller) {
+                      Controller controller,
+                      SimulationSettings settings) {
         this.map = map;
         this.statistic = statistic;
         this.renderer = renderer;
@@ -41,33 +44,28 @@ public class Simulation implements Runnable {
         this.eachTurnActions = eachTurnActions;
         this.finishActions = finishActions;
         this.controller = controller;
+        this.settings = settings;
     }
 
     public int getMoves() {
         return moves;
     }
 
+    public boolean isRunning() {
+        return running;
+    }
+
     public void nextTurn() {
         for (TurnAction action : eachTurnActions) {
             action.update(map);
         }
-        statistic.printConsistencyCheck(map);
         moves++;
-    }
-
-    public void startSimulation() {
-        for (InitAction action : oneTimeActions) {
-            action.initiate(map);
-        }
-        statistic.captureInitial(map);
     }
 
     public void finishSimulation() {
         for (FinishAction finishAction : finishActions) {
             finishAction.finish(map, renderer);
         }
-        //finishActions.forEach(a -> a.finish(map, renderer));
-        //посмотрть консьюмеры (забыл)
     }
 
     public void pauseSimulation() {
@@ -75,16 +73,103 @@ public class Simulation implements Runnable {
     }
 
     public void stop() {
+        log.info("Stop requested");
         running = false;
         controller.resume();
     }
 
-    public static void main(String[] args) throws InterruptedException {
+    public void startSimulation() {
+        for (InitAction action : oneTimeActions) {
+            action.initiate(map);
+        }
+        statistic.captureInitial(map);
+        log.info("Simulation initialized: map {}x{}", map.getWidth(), map.getHeight());
+    }
+
+    private void getRender() {
+        SwingUtilities.invokeLater(
+                () -> renderer.render(map, moves, statistic)
+        );
+    }
+
+    @Override
+    public void run() {
+        log.info("Simulation thread started");
+        startSimulation();
+        getRender();
+
+        while (running) {
+            try {
+                controller.awaitPermission();
+            } catch (InterruptedException e) {
+                if (!running) {
+                    log.info("Simulation interrupted after STOP");
+                    break;
+                } else {
+                    log.warn("awaitPermission interrupted while running; continue loop");
+                    continue;
+                }
+            }
+
+            if (!running) {
+                log.info("Stopping: running=false detected before turn");
+                break;
+            }
+
+            log.debug("Turn {}", moves + 1);
+            nextTurn();
+            getRender();
+
+            int maxMoves = settings.getMaxMoves();
+            if (maxMoves > 0 && moves >= maxMoves) {
+                log.info("Reached maxMoves={} (moves={}), stopping", maxMoves, moves);
+                running = false;
+                break;
+            }
+
+            if (!controller.isPaused()) {
+                int delay = settings.getDelay();
+                if (delay > 0) {
+                    try {
+                        Thread.sleep(delay);
+                    } catch (InterruptedException e) {
+                        log.warn("Sleep interrupted; stopping");
+                        Thread.currentThread().interrupt();
+                        break;
+                    }
+                }
+
+            }
+        }
+
+        log.info("Simulation finished; totalMoves={}", moves);
+        finishSimulation();
+    }
+
+    private static Result getSimulationStarted(MapPreset mapPreset, SimulationSettings simulationSettings) {
+        GrassPreset grassPreset = switch (mapPreset) {
+            case SMALL -> GrassPreset.SMALL;
+            case MEDIUM -> GrassPreset.MEDIUM;
+            case LARGE -> GrassPreset.LARGE;
+        };
+
+        ObstaclesPreset obstaclesPreset = switch (mapPreset) {
+            case SMALL -> ObstaclesPreset.SMALL;
+            case MEDIUM -> ObstaclesPreset.MEDIUM;
+            case LARGE -> ObstaclesPreset.LARGE;
+        };
+
+        CreaturesPreset creaturesPreset = switch (mapPreset) {
+            case SMALL -> CreaturesPreset.SMALL;
+            case MEDIUM -> CreaturesPreset.MEDIUM;
+            case LARGE -> CreaturesPreset.LARGE;
+        };
+
         SimulationConfig config = new SimulationPreset(
-                GrassPreset.MEDIUM,
-                ObstaclesPreset.MEDIUM,
-                CreaturesPreset.MEDIUM,
-                MapPreset.MEDIUM
+                grassPreset,
+                obstaclesPreset,
+                creaturesPreset,
+                mapPreset
         ).toConfig();
 
         WorldMap worldMap = new WorldMap(config.getMapConfig());
@@ -113,75 +198,64 @@ public class Simulation implements Runnable {
         Controller controller = new Controller();
         Simulation simulation = new Simulation(
                 worldMap,
-                renderer,
                 statistic,
+                renderer,
                 initActions,
                 turnActions,
                 finishActions,
-                controller
+                controller,
+                simulationSettings
         );
-
-        Thread t = new Thread(simulation);
-
-        t.start();
-
-        simulation.pauseSimulation();
-        //controller.pause();
-        controller.oneMoreMove();
-        controller.oneMoreMove();
-        controller.resume();
-
-        t.join();
+        return new Result(controller, simulation, renderer);
     }
 
-    private void getRender() {
-        SwingUtilities.invokeLater(
-                () -> renderer.render(map, moves, statistic)
-        );
-    }
+    public static void main(String[] args) throws InterruptedException {
+        ConsoleCommandSource commandSource = new ConsoleCommandSource();
 
-    @Override
-    public void run() {
-        startSimulation();
-        getRender();
+        boolean continueSimulation = true;
+        while (continueSimulation) {
+            System.out.println("Начать новую симуляцию? Введите 'д' для начала или 'н' для выхода.");
+            if (!commandSource.askToStart()) {
+                continueSimulation = false;
+                continue;
+            }
 
-        while (running) {
+            ConsoleCommandSource.StartOptions startOptions = commandSource.collectStartOptions();
+
+            MapPreset mapPreset = switch (startOptions.map()) {
+                case SMALL -> MapPreset.SMALL;
+                case MEDIUM -> MapPreset.MEDIUM;
+                case LARGE -> MapPreset.LARGE;
+            };
+
+            SimulationSettings settings = startOptions.settings();
+
+            Result result = getSimulationStarted(mapPreset, settings);
+
+            result.simulation().pauseSimulation();
+            Thread t = new Thread(result.simulation(), "epicSimulation");
+            result.renderer().setOnClose(() -> {
+                result.simulation().stop();
+                t.interrupt();
+            });
+
+            CommandSource realCommandSource = new ConsoleCommandSource(result.controller(), result.simulation(), t);
+
+            t.start();
             try {
-                controller.awaitPermission();
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-
-
-            nextTurn();
-
-            try {
-                Thread.sleep(5000);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                break;
-            }
-
-            moves++;
-            getRender();
-/*
-            if(true) { //как будто лочит БЕЗ команды со стороны
-                pauseSimulation();
-            }
-
-            if(true) { //польователь дал команду продолжать дальше
-                controller.oneMoreMove();
-            }*/
-
-            if (moves >= 30) {
-                running = false;
+                realCommandSource.runProgram();
+            } finally {
+                result.simulation().stop();
+                t.interrupt();
+                t.join();
+                result.renderer().dispose();
             }
         }
-
-        finishSimulation();
+        commandSource.close();
     }
 
     record SimulationPreset(GrassPreset grass, ObstaclesPreset obstacles, CreaturesPreset creatures, MapPreset map) {
+
         public SimulationPreset {
         }
 
@@ -203,9 +277,9 @@ public class Simulation implements Runnable {
                 MapConfig mapConfig
         ) {
             double grassShare = grassConfig.getCapShare();
-            double obstShare  = obstaclesConfig.getCapShare();
-            double herbShare  = creaturesConfig.getHerbivoresCapShare();
-            double predShare  = creaturesConfig.getPredatorsCapShare();
+            double obstShare = obstaclesConfig.getCapShare();
+            double herbShare = creaturesConfig.getHerbivoresCapShare();
+            double predShare = creaturesConfig.getPredatorsCapShare();
             double shareSum = grassShare + obstShare + herbShare + predShare;
             if (shareSum > mapConfig.getOccupancyRatio()) {
                 throw new IllegalArgumentException(String.format(
@@ -216,5 +290,9 @@ public class Simulation implements Runnable {
                 ));
             }
         }
+
+    }
+
+    private record Result(Controller controller, Simulation simulation, Renderer renderer) {
     }
 }

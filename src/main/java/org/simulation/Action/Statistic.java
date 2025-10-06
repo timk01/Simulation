@@ -5,10 +5,14 @@ import org.entity.Herbivore;
 import org.entity.Predator;
 import org.map.WorldMap;
 import org.simulation.InitAction;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
 public class Statistic {
+    private static final Logger log = LoggerFactory.getLogger(Statistic.class);
+
     private int initialHerbivores;
     private int initialPredators;
     private int starvedHerbivores;
@@ -29,18 +33,16 @@ public class Statistic {
         this.initialPredators = (int) map.getCells().values().stream()
                 .filter(e -> e instanceof Predator)
                 .count();
+
+        log.info("[INIT] counts: herbivores={}, predators={}", initialHerbivores, initialPredators);
     }
 
     public void printConsistencyCheck(WorldMap map) {
         map.getCells().values().forEach(e -> {
             if (e instanceof Herbivore h && h.getDeathReason() != null) {
-                System.out.println("[LEFT] " + h.getIdString()
-                        + " hp=" + h.getHp()
-                        + " reason=" + h.getDeathReason());
+                log.debug("[LEFT] {} hp={} reason={}", h.getIdString(), h.getHp(), h.getDeathReason());
             } else if (e instanceof Predator p && p.getDeathReason() != null) {
-                System.out.println("[LEFT] " + p.getIdString()
-                        + " hp=" + p.getHp()
-                        + " reason=" + p.getDeathReason());
+                log.debug("[LEFT] {} hp={} reason={}", p.getIdString(), p.getHp(), p.getDeathReason());
             }
         });
 
@@ -54,25 +56,19 @@ public class Statistic {
         int totalDeadHerbivores = starvedHerbivores + killedByPredator;
         int totalDeadPredators = starvedPredators;
 
-        System.out.println("[CHECK] Herbivores: init=" + initialHerbivores
-                + ", left=" + currentHerbivores
-                + ", dead=" + totalDeadHerbivores
-                + ", sum=" + (currentHerbivores + totalDeadHerbivores));
-
-        System.out.println("[CHECK] Predators: init=" + initialPredators
-                + ", left=" + currentPredators
-                + ", dead=" + totalDeadPredators
-                + ", sum=" + (currentPredators + totalDeadPredators));
+        log.debug("[CHECK] Herbivores: init={}, left={}, dead={}, sum={}",
+                initialHerbivores, currentHerbivores, totalDeadHerbivores, (currentHerbivores + totalDeadHerbivores));
+        log.debug("[CHECK] Predators: init={}, left={}, dead={}, sum={}",
+                initialPredators, currentPredators, totalDeadPredators, (currentPredators + totalDeadPredators));
 
         int sumKills = getTotalPredatorKills();
         if (sumKills != killedByPredator) {
-            System.out.println("[WARN] kills-by-predator sum=" + sumKills
-                    + " != killedByPredator=" + killedByPredator);
+            log.warn("[CHECK] kills-by-predator sum={} != killedByPredator={}", sumKills, killedByPredator);
         }
 
         int sumGrass = getTotalGrassEaten();
         if (sumGrass > 0) {
-            System.out.println("[CHECK] Grass eaten total=" + sumGrass);
+            log.debug("[CHECK] Grass eaten total={}", sumGrass);
         }
     }
 
@@ -82,8 +78,8 @@ public class Statistic {
         }
         registeredDead.add(creature);
 
-        System.out.println("[STAT] deathRegistrator reason=" + creature.getDeathReason()
-                + " class=" + creature.getClass().getSimpleName());
+        log.debug("[STAT] deathRegistrator reason={} class={}",
+                creature.getDeathReason(), creature.getClass().getSimpleName());
 
         if (creature instanceof Herbivore
                 && creature.getDeathReason() == Creature.DeathReason.STARVATION) {
