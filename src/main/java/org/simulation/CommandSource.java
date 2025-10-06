@@ -4,6 +4,4 @@ public interface CommandSource {
     boolean askToStart();
 
     void runProgram();
-
-    void close();
 }
