@@ -7,6 +7,7 @@ import org.entity.Tree;
 import org.simulation.config.MapConfig;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class WorldMap {
@@ -15,7 +16,7 @@ public class WorldMap {
     private final double occupancyRatio;
 
     private int worldMapVersion;
-    private final Map<Location, Entity> cells;
+    private final ConcurrentHashMap<Location, Entity> cells;
     private final MapConfig cfg;
 
     public WorldMap(MapConfig cfg) {
@@ -23,7 +24,10 @@ public class WorldMap {
         this.width = cfg.getWidth();
         this.height = cfg.getHeight();
         this.occupancyRatio = cfg.getOccupancyRatio();
-        this.cells = new HashMap<>((int) Math.floor(width * height * occupancyRatio));
+
+        int expected = (int) Math.ceil(width * height * occupancyRatio);
+        int initialCapacity = Math.max(16, expected);
+        this.cells = new ConcurrentHashMap<>(initialCapacity);
     }
 
     public WorldMap() {
@@ -42,7 +46,7 @@ public class WorldMap {
         return worldMapVersion;
     }
 
-    public Map<Location, Entity> getCells() {
+    public ConcurrentHashMap<Location, Entity> getCells() {
         return cells;
     }
 

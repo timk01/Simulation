@@ -13,14 +13,15 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Simulation implements Runnable {
     private static final Logger log = LoggerFactory.getLogger(Simulation.class);
+    private final Object moveLock = new Object();
 
     private final WorldMap map;
     private final Statistic statistic;
 
-    private int moves;
     private final Renderer renderer;
     private final List<InitAction> oneTimeActions;
     private final List<TurnAction> eachTurnActions;
@@ -28,6 +29,7 @@ public class Simulation implements Runnable {
     private final Controller controller;
     private final SimulationSettings settings;
     private volatile boolean running = true;
+    private final AtomicInteger moves = new AtomicInteger(0);
 
     public Simulation(WorldMap map,
                       Statistic statistic,
@@ -48,18 +50,41 @@ public class Simulation implements Runnable {
     }
 
     public int getMoves() {
-        return moves;
+        return moves.get();
+    }
+
+    public WorldMap getMap() {
+        return map;
+    }
+
+    public Statistic getStatistic() {
+        return statistic;
     }
 
     public boolean isRunning() {
         return running;
     }
 
+    public static void shutdownUi() {
+        SwingUtilities.invokeLater(() -> {
+            for (java.awt.Window w : java.awt.Window.getWindows()) {
+                try {
+                    w.dispose();
+                } catch (Exception ignored) {
+                    log.warn("while closing window in shutdownUi --> exception " + ignored);
+                }
+            }
+        });
+    }
+
     public void nextTurn() {
         for (TurnAction action : eachTurnActions) {
             action.update(map);
         }
-        moves++;
+        synchronized (moveLock) {
+            moves.incrementAndGet();
+            moveLock.notifyAll();
+        }
     }
 
     public void finishSimulation() {
@@ -76,6 +101,18 @@ public class Simulation implements Runnable {
         log.info("Stop requested");
         running = false;
         controller.resume();
+        synchronized (moveLock) {
+            moveLock.notifyAll();
+        }
+    }
+
+    public void setKeepWindowOpenOnFinish(boolean keep) {
+        renderer.setKeepWindowOpenOnFinish(keep);
+    }
+
+    public void stopAndClose() {
+        renderer.setKeepWindowOpenOnFinish(false);
+        stop();
     }
 
     public void startSimulation() {
@@ -88,8 +125,27 @@ public class Simulation implements Runnable {
 
     private void getRender() {
         SwingUtilities.invokeLater(
-                () -> renderer.render(map, moves, statistic)
+                () -> renderer.render(map, moves.get(), statistic)
         );
+    }
+
+    public boolean awaitMoveIncrement(int prev, long timeoutMs) {
+        long deadline = System.currentTimeMillis() + timeoutMs;
+        synchronized (moveLock) {
+            while (isRunning() && moves.get() == prev) {
+                long wait = deadline - System.currentTimeMillis();
+                if (wait <= 0) {
+                    return false;
+                }
+                try {
+                    moveLock.wait(wait);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    return false;
+                }
+            }
+            return moves.get() != prev;
+        }
     }
 
     @Override
@@ -98,52 +154,54 @@ public class Simulation implements Runnable {
         startSimulation();
         getRender();
 
-        while (running) {
-            try {
-                controller.awaitPermission();
-            } catch (InterruptedException e) {
-                if (!running) {
-                    log.info("Simulation interrupted after STOP");
-                    break;
-                } else {
-                    log.warn("awaitPermission interrupted while running; continue loop");
-                    continue;
-                }
-            }
-
-            if (!running) {
-                log.info("Stopping: running=false detected before turn");
-                break;
-            }
-
-            log.debug("Turn {}", moves + 1);
-            nextTurn();
-            getRender();
-
-            int maxMoves = settings.getMaxMoves();
-            if (maxMoves > 0 && moves >= maxMoves) {
-                log.info("Reached maxMoves={} (moves={}), stopping", maxMoves, moves);
-                running = false;
-                break;
-            }
-
-            if (!controller.isPaused()) {
-                int delay = settings.getDelay();
-                if (delay > 0) {
-                    try {
-                        Thread.sleep(delay);
-                    } catch (InterruptedException e) {
-                        log.warn("Sleep interrupted; stopping");
-                        Thread.currentThread().interrupt();
+        try {
+            while (running) {
+                try {
+                    controller.awaitPermission();
+                } catch (InterruptedException e) {
+                    if (!running) {
+                        log.info("Simulation interrupted after STOP");
                         break;
+                    } else {
+                        log.warn("awaitPermission interrupted while running; continue loop");
+                        continue;
                     }
                 }
 
-            }
-        }
+                if (!running) {
+                    log.info("Stopping: running=false detected before turn");
+                    break;
+                }
 
-        log.info("Simulation finished; totalMoves={}", moves);
-        finishSimulation();
+                log.debug("Turn {}", getMoves() + 1);
+                nextTurn();
+                getRender();
+
+                int maxMoves = settings.getMaxMoves();
+                if (maxMoves > 0 && getMoves() >= maxMoves) {
+                    log.info("Reached maxMoves={} (moves={}), stopping", maxMoves, getMoves());
+                    running = false;
+                    break;
+                }
+
+                if (!controller.isPaused()) {
+                    int delay = settings.getDelay();
+                    if (delay > 0) {
+                        try {
+                            Thread.sleep(delay);
+                        } catch (InterruptedException e) {
+                            log.warn("Sleep interrupted; stopping");
+                            Thread.currentThread().interrupt();
+                            break;
+                        }
+                    }
+
+                }
+            }
+            log.info("Simulation finished; totalMoves={}", moves);
+        } finally {
+            finishSimulation();
+        }
     }
 
     private static Result getSimulationStarted(MapPreset mapPreset, SimulationSettings simulationSettings) {
@@ -232,11 +290,19 @@ public class Simulation implements Runnable {
 
             Result result = getSimulationStarted(mapPreset, settings);
 
-            result.simulation().pauseSimulation();
-            Thread t = new Thread(result.simulation(), "epicSimulation");
-            result.renderer().setOnClose(() -> {
-                result.simulation().stop();
+            Renderer renderer = result.renderer();
+            renderer.setKeepWindowOpenOnFinish(true);
+
+            final Simulation sim = result.simulation();
+            sim.pauseSimulation();
+            Thread t = new Thread(sim, "epicSimulation");
+
+            renderer.setOnClose(() -> {
+                log.info("renderer.onClose -> stop");
+                renderer.setKeepWindowOpenOnFinish(false);
+                sim.stop();
                 t.interrupt();
+                shutdownUi();
             });
 
             CommandSource realCommandSource = new ConsoleCommandSource(result.controller(), result.simulation(), t);
@@ -245,9 +311,13 @@ public class Simulation implements Runnable {
             try {
                 realCommandSource.runProgram();
             } finally {
-                result.simulation().stop();
                 t.interrupt();
                 t.join();
+
+                Renderer finalRenderer = result.renderer();
+                finalRenderer.render(result.simulation().getMap(),
+                        result.simulation().getMoves(),
+                        result.simulation().getStatistic());
                 result.renderer().dispose();
             }
         }

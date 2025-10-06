@@ -14,7 +14,7 @@ import java.util.Map;
 
 public class Renderer {
     private static final Logger log = LoggerFactory.getLogger(Renderer.class);
-
+    private static final long MIN_RENDER_INTERVAL_MS = 16;
 
     private final Map<Class<? extends Entity>, Icon> icons = new HashMap<>();
     private int cellSize;
@@ -31,6 +31,11 @@ public class Renderer {
     private final JLabel starvedPredatorsLabel;
     private final JLabel killedByPredatorsLabel;
     private final JLabel grassEatenTotalLabel;
+
+    private volatile boolean keepWindowOpenOnFinish = false;
+    private volatile long lastRenderAt = 0;
+
+
     private Runnable onClose;
 
     public void setOnClose(Runnable onClose) {
@@ -204,17 +209,6 @@ public class Renderer {
         }
     }
 
-    private void updateBoard(WorldMap map) {
-        for (Map.Entry<Location, Entity> cell : map.getCells().entrySet()) {
-            Location location = cell.getKey();
-            Entity clazz = cell.getValue();
-            Icon icon = icons.get(clazz.getClass());
-            if (icon != null) {
-                cells[location.y()][location.x()].setIcon(icon);
-            }
-        }
-    }
-
     private void updateCounters(WorldMap map, int turn) {
         int herbivoreCount = (int) map.getCells().values().stream()
                 .filter(e -> e instanceof Herbivore)
@@ -240,20 +234,60 @@ public class Renderer {
     }
 
     public void render(WorldMap map, int turn, Statistic stat) {
-        cleanBoard();
+        long now = System.nanoTime();
+        if ((now - lastRenderAt) < MIN_RENDER_INTERVAL_MS * 1_000_000L) {
+            return;
+        }
+        lastRenderAt = now;
 
-        updateBoard(map);
-        updateCounters(map, turn);
-        updateStats(stat);
+        runOnEdt(() -> {
+            cleanBoard();
 
-        gridPanel.repaint();
+            map.getCells().forEach((location, entity) -> {
+                Icon icon = icons.get(entity.getClass());
+                if (icon != null) {
+                    cells[location.y()][location.x()].setIcon(icon);
+                }
+            });
 
+            updateCounters(map, turn);
+            updateStats(stat);
+
+            gridPanel.revalidate();
+            gridPanel.repaint();
+        });
         log.debug("Render frame: turn={}", turn);
     }
 
+    private void runOnEdt(Runnable r) {
+        if (SwingUtilities.isEventDispatchThread()) {
+            r.run();
+        } else {
+            SwingUtilities.invokeLater(r);
+        }
+    }
+
     public void dispose() {
+        if (keepWindowOpenOnFinish) {
+            log.info("Renderer finish: leaving window open (keepWindowOpenOnFinish=true)");
+            new javax.swing.Timer(50, e -> {
+                JOptionPane.showMessageDialog(
+                        jFrame,
+                        "Симуляция завершена.\nОкно оставлено открытым — закройте его вручную.",
+                        "Готово",
+                        JOptionPane.INFORMATION_MESSAGE
+                );
+                ((javax.swing.Timer)e.getSource()).stop();
+            }).start();
+            return;
+        }
+
         log.info("Renderer dispose requested");
-        SwingUtilities.invokeLater(jFrame::dispose);
+        runOnEdt(jFrame::dispose);
+    }
+
+    public void setKeepWindowOpenOnFinish(boolean keepItOpen) {
+        this.keepWindowOpenOnFinish = keepItOpen;
     }
 
     public void showResults(
@@ -289,5 +323,6 @@ public class Renderer {
                     log.info("{} ate {} grasses", id, count));
         }
         log.info("===========================");
+        log.info("{}{}{}", System.lineSeparator(), System.lineSeparator(), System.lineSeparator());
     }
 }

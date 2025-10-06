@@ -5,8 +5,12 @@ import org.entity.Herbivore;
 import org.entity.Predator;
 import org.map.WorldMap;
 import org.simulation.Action.Statistic;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ShowReportAction implements FinishAction {
+    private static final Logger log = LoggerFactory.getLogger(ShowReportAction.class);
+
     private final Statistic statistic;
 
     public ShowReportAction(Statistic statistic) {
@@ -21,6 +25,7 @@ public class ShowReportAction implements FinishAction {
 
     @Override
     public void finish(WorldMap map, Renderer renderer) {
+        log.info("[Finish] Emitting final report");
         long herbivoresLeft = getCount(map, Herbivore.class);
 
         long predatorsLeft = getCount(map, Predator.class);

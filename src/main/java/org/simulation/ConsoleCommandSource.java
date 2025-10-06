@@ -3,19 +3,22 @@ package org.simulation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.EOFException;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 
 public class ConsoleCommandSource implements CommandSource {
+    private static final long MIN_PAUSE_BETWEEN_MOVES = 300L;
     private static final Logger log = LoggerFactory.getLogger(ConsoleCommandSource.class);
 
     private final Controller controller;
     private final Simulation simulation;
     private final Thread simThread;
-    private final Scanner scanner = new Scanner(System.in);
+    private final Scanner scanner = new Scanner(new InputStreamReader(System.in, StandardCharsets.UTF_8));
     private static final Locale RU = Locale.forLanguageTag("ru");
 
     private static final Map<Character, Boolean> START = Map.of(
@@ -57,18 +60,17 @@ public class ConsoleCommandSource implements CommandSource {
         while (true) {
             if (!simulation.isRunning()) {
                 log.info("Simulation is no longer running — exiting console loop");
+                ConsoleCommandSource.printFinalInfo();
                 return;
             }
 
             System.out.print("> ");
-            char key;
-            try {
-                key = getGuessedChar();
-                log.debug("Command key read: '{}'", key);
-            } catch (EOFException eof) {
-                log.warn("EOF while reading command, stopping simulation", eof);
+            Character key = getGuessedCharOrNull();
+            log.debug("Command key read: '{}'", key);
+            if (key == null) {
                 simulation.stop();
                 simThread.interrupt();
+                ConsoleCommandSource.printFinalInfo();
                 return;
             }
 
@@ -77,14 +79,17 @@ public class ConsoleCommandSource implements CommandSource {
                 case STOP -> {
                     log.info("Command: STOP");
                     System.out.println("⏹ stop");
-                    simulation.stop();
-                    simThread.interrupt();
+                    simulation.stopAndClose();
+                    ConsoleCommandSource.printFinalInfo();
                     return;
                 }
                 case STEP -> {
                     log.info("Command: STEP");
                     System.out.println("⏭ step");
+                    int before = simulation.getMoves();
                     controller.oneMoreMove();
+
+                    simulation.awaitMoveIncrement(before, MIN_PAUSE_BETWEEN_MOVES);
                     printStatus();
                 }
                 case PAUSE -> {
@@ -97,7 +102,6 @@ public class ConsoleCommandSource implements CommandSource {
                     log.info("Command: RESUME");
                     System.out.println("▶ resume");
                     controller.resume();
-                    printStatus();
                 }
             }
         }
@@ -112,34 +116,13 @@ public class ConsoleCommandSource implements CommandSource {
         }
     }
 
-    private char getGuessedNumber() throws EOFException {
-        while (true) {
-            String word = readLineOrNull();
-            if (word == null) {
-                throw new EOFException("EOF while guessing number");
-            }
-
-            word = word.trim();
-            log.trace("Number raw input: '{}'", word);
-            if (!word.isEmpty()) {
-                char ch = word.charAt(0);
-                if (isKeyAllowed(ch, MAP)) {
-                    log.debug("Number accepted: '{}'", ch);
-                    return ch;
-                }
-            }
-            log.warn("Invalid number input: '{}'", word);
-            System.out.println("Некорректный ввод ->");
-        }
-    }
-
-    private char getGuessedChar() throws EOFException {
+    private Character getGuessedCharOrNull() {
         String word;
         do {
             System.out.println("Команда (ф=пауза, ы=продолжить, в=ход, ц=выход)");
-            word = readLineOrNull();
+            word = (simulation == null) ? readLineOrNull() : readLineOrNullNonBlocking();
             if (word == null) {
-                throw new EOFException("EOF while quesssing char");
+                return null;
             }
 
             String properInput = toLowerRus(word);
@@ -163,6 +146,30 @@ public class ConsoleCommandSource implements CommandSource {
             return line;
         } catch (NoSuchElementException | IllegalStateException e) {
             log.warn("Scanner read failed", e);
+            return null;
+        }
+    }
+
+    private String readLineOrNullNonBlocking() {
+        try {
+            while (true) {
+                if (simulation != null && !simulation.isRunning()) {
+                    return null;
+                }
+                if (System.in.available() > 0) {
+                    if (scanner.hasNextLine()) {
+                        String line = scanner.nextLine();
+                        log.trace("Read line: '{}'", line);
+                        return line;
+                    }
+                }
+                Thread.sleep(50);
+            }
+        } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
+            return null;
+        } catch (IOException e) {
+            log.warn("Console non-blocking read failed", e);
             return null;
         }
     }
@@ -243,7 +250,7 @@ public class ConsoleCommandSource implements CommandSource {
 
     public Integer askIntValue(int min, int max) {
         while (true) {
-            System.out.println("Нужно ввести число (enter = оставить пресет по-умолчанию)");
+            System.out.println("Нужно ввести число (enter = оставить по-умолчанию)");
             String askedStr = readLineOrNull();
             if (askedStr == null || askedStr.isEmpty()) {
                 log.info("askIntValue: default (null) chosen");
@@ -300,14 +307,19 @@ public class ConsoleCommandSource implements CommandSource {
         System.out.println("""
                 Добро пожаловать в программу симуляция!
                             
-                Здесь вы сможете наблюдать за эмуляцией (хотя и ограниченной) животного мира - окно откроется справа.
+                Здесь вы сможете наблюдать за эмуляцией (хотя и ограниченной) животного мира:
+                демонстрационное окно откроется справа.
+                                
                 Помимо неподвижных объектов: камней, деревьев, есть двое видов существ - это травоядные и хищники.
-                Травоядные - питаются травой (она постепенно растет), хищники - травоядными.
-                У всех животных постепенно уменьшается здоровье, а в конце симуляции - вы можете увидеть статистику.
+                Травоядные - питаются травой (она постепенно растет), хищники - травоядными и - 
+                движутся по карте к своим целям по кратчайшему маршртуру.
+                                
+                У всех животных постепенно уменьшается здоровье, но трава растет.
+                                
+                А в конце симуляции - вы можете увидеть статистику.
                             
-                Также, если вас на устраивают настройки по умолчанию или выбранный режим
-                - карты, количество движимых/недвижимых объектов н ней (см. ниже),
-                вы можете попытаться задать свои.
+                В начале игры вы можете выбрать режим и настройки
+                - карты, количество движимых/недвижимых объектов на ней, паузы и ходов (см. ниже)
                             
                 Желаю нескучно провести время!
                                 
@@ -315,6 +327,14 @@ public class ConsoleCommandSource implements CommandSource {
                 ****************************************************
                 """);
     }
+
+    public static void printFinalInfo() {
+        System.out.println("""
+                Расширенную статистику симуляцию с финальным отчетом вы можете посмотреть в:
+                logs/simulation.log
+                """);
+    }
+
 
     public record StartOptions(ChosenMap map, SimulationSettings settings) {
     }
@@ -326,7 +346,7 @@ public class ConsoleCommandSource implements CommandSource {
 
         Integer delay = null;
         System.out.println("Изменить задержку между ходами? [д/н] --> по умолчанию "
-                + SimulationSettings.defaultDelay() + " мс");
+                + SimulationSettings.defaultDelay() + " мс (нужно неотрицательное число)");
         if (askToStart()) {
             Integer ms = askIntValue(0, SimulationSettings.maxDelay());
             if (ms != null) {

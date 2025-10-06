@@ -4,11 +4,14 @@ import org.map.Location;
 import org.map.WorldMap;
 import org.map.path.MapAndGoal;
 import org.map.path.PathFinder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class Predator extends Creature {
+    private static final Logger log = LoggerFactory.getLogger(Predator.class);
 
     private static final int MIN_SPEED = 1;
     private static final int MAX_SPEED = 4;
@@ -67,7 +70,7 @@ public class Predator extends Creature {
             int killHp = ThreadLocalRandom.current().nextInt(maxGain - minGain + 1) + minGain;
             this.setHp(this.getHp() + killHp);
 
-            System.out.printf("[EAT] %s killed %s at %s, gain=%d, hp=%d->%d%n",
+            log.debug("[KILL] {} killed {} at {}, gain={}, hp={}->{}",
                     this, herbivore, targetLoc, killHp, selfBefore, this.getHp());
             return new KillResult(targetLoc, true);
         }
