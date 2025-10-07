@@ -4,25 +4,24 @@ import org.simulation.console.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-
 public class ConsoleCommandSource implements CommandSource {
     private static final Logger log = LoggerFactory.getLogger(ConsoleCommandSource.class);
 
     private final Controller controller;
     private final Simulation simulation;
     private final Thread simThread;
-    private final ConsoleIO io = ConsoleIO.autodetect();
+    private final ConsoleIO io;
     private final InputChecker ic = new InputChecker();
 
-    public ConsoleCommandSource() {
+    public ConsoleCommandSource(ConsoleIO io) {
+        this.io = io;
         this.simThread = null;
         this.controller = null;
         this.simulation = null;
     }
 
-    public ConsoleCommandSource(Controller controller, Simulation simulation, Thread simThread) {
+    public ConsoleCommandSource(Controller controller, Simulation simulation, Thread simThread, ConsoleIO io) {
+        this.io = io;
         this.controller = controller;
         this.simulation = simulation;
         this.simThread = simThread;

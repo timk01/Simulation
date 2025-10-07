@@ -7,7 +7,6 @@ import java.io.Console;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
-import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -31,28 +30,33 @@ public final class ConsoleIO {
         this.ownsStream = ownsStream;
     }
 
-    public static ConsoleIO autodetect() {
-        Console console = System.console();
-        Charset cs = (console != null && console.charset() != null)
-                ? console.charset()
-                : Charset.defaultCharset();
-        return new ConsoleIO(System.in, cs, false);
-    }
-
     /**
-     * Блокирующее чтение следующей строки; null при EOF/ошибке.
+     * Мягко блокирующее чтение следующей строки из очереди, наполняемой
+     * фоновым reader-потоком. Возвращает null при EOF/ошибке ввода.
+     *
+     * Внутри — бесконечный цикл с poll(queue, NON_BLOCKING_POLL_MS):
+     * это позволяет не зависать навечно и корректно завершаться при EOF,
+     * сохраняя поведение близким к блокирующему Scanner.nextLine().
+     *
+     * И это - тоже костыль (см. ниже).
      */
     public String readLineOrNull() {
-        if (!scanner.hasNextLine()) {
-            log.debug("Scanner has no next line (EOF)");
-            return null;
-        }
+        ensureReaderStarted();
         try {
-            String line = scanner.nextLine();
-            log.trace("Read line: '{}'", line);
-            return line;
-        } catch (NoSuchElementException | IllegalStateException e) {
-            log.warn("Scanner read failed", e);
+            while (true) {
+                if (eof && inbox.isEmpty()) {
+                    return null;
+                }
+                String s = inbox.poll(ConsoleConfig.NON_BLOCKING_POLL_MS, TimeUnit.MILLISECONDS);
+                if (s != null) {
+                    return s;
+                }
+            }
+        } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
+            return null;
+        } catch (RuntimeException e) {
+            log.warn("Scanner read failed (blocking via queue)", e);
             return null;
         }
     }
@@ -88,19 +92,24 @@ public final class ConsoleIO {
     }
 
     /**
-     * Псевдо-неблокирующее чтение с опросом очереди.
-     * Возвращает строку когда она появляется; возвращает null если:
-     * - наступил EOF/ошибка ввода, или
-     * - сработал предикат abort.getAsBoolean() (например, симуляция остановлена).
+     * Псевдо-неблокирующее чтение с опросом очереди из фонового reader-потока.
+     * Возвращает строку, когда она появляется; возвращает null, если:
+     *  - наступил EOF/ошибка ввода (scanner исчерпан), ИЛИ
+     *  - сработал предикат abort.getAsBoolean() (например, симуляция остановлена).
+     *
+     * Реализация использует бесконечный цикл с периодическим poll из BlockingQueue
+     * (см. NON_BLOCKING_POLL_MS).
+     *
+     * Это - костыль. Но рабочий костыль.
      */
     public String readLineOrNullNonBlockingUntil(BooleanSupplier abort) {
         ensureReaderStarted();
         try {
-            while (true) {
+            while(true) {
                 if (abort != null && abort.getAsBoolean()) {
                     return null;
                 }
-                if (eof) {
+                if (eof && inbox.isEmpty()) {
                     return null;
                 }
                 String s = inbox.poll(ConsoleConfig.NON_BLOCKING_POLL_MS, TimeUnit.MILLISECONDS);

@@ -1,10 +1,13 @@
 package org.simulation;
 
 import org.simulation.config.preset.MapPreset;
+import org.simulation.console.ConsoleIO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+
+import java.nio.charset.Charset;
 
 import static org.simulation.Simulation.getSimulationStarted;
 
@@ -12,7 +15,10 @@ public class SimulationApp {
     private static final Logger log = LoggerFactory.getLogger(SimulationApp.class);
 
     public static void runSimulation() throws InterruptedException {
-        ConsoleCommandSource commandSource = new ConsoleCommandSource();
+        String enc = System.getProperty("sim.console.encoding",
+                Charset.defaultCharset().name());
+        ConsoleIO io = new ConsoleIO(System.in, Charset.forName(enc), false);
+        ConsoleCommandSource commandSource = new ConsoleCommandSource(io);
 
         boolean continueSimulation = true;
         while (continueSimulation) {
@@ -49,7 +55,7 @@ public class SimulationApp {
                 shutdownUi();
             });
 
-            CommandSource realCommandSource = new ConsoleCommandSource(result.controller(), result.simulation(), t);
+            CommandSource realCommandSource = new ConsoleCommandSource(result.controller(), result.simulation(), t, io);
 
             t.start();
             try {
