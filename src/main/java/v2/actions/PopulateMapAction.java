@@ -14,12 +14,6 @@ import java.util.Optional;
 
 public class PopulateMapAction implements Action {
 
-    private int ROCK_COUNTER = 2;
-    private int TREE_COUNTER = 2;
-    private int GRASS_COUNTER = 2;
-    private int HERBIVORE_COUNTER = 2;
-    private int PREDATOR_COUNTER = 2;
-
     record EntityPlan(EntityType entityType, int quantity) {
 
     }
@@ -29,6 +23,9 @@ public class PopulateMapAction implements Action {
         EntityFactory entityFactory = new EntityFactory();
 
         List<Location> emptyLocations = fillEmptyLocationsList(map);
+        // TODO: добавить пресеты конфигурации (SMALL/MEDIUM/LARGE) с фиксированными counts и size; убрать хардкод "2"
+        // todo: начать с базы 20*20 как в старом проекте - и боже тебя упаси ставить капы. просто хардкод на проработанные размеры
+
         Collections.shuffle(emptyLocations);
 
         List<EntityPlan> planList = new ArrayList<>();
@@ -37,11 +34,12 @@ public class PopulateMapAction implements Action {
             //toDo 2 - приходит из общего конфига как каунтер существ (максимальный)
         }
 
-        for (EntityType entityType : EntityType.values()) {
-            for (int i = 0; i < 2; i++) {
-            Location location = emptyLocations.get(0);
-            emptyLocations.remove(0);
-            map.tryAddEntity(location, entityFactory.createEntity(entityType));
+        int entitiesPlanted = 0;
+        for (EntityPlan entityPlan : planList) {
+            EntityType type = entityPlan.entityType();
+            int quantity = entityPlan.quantity();
+            for (int i = 0; i < quantity; i++) {
+                map.tryAddEntity(emptyLocations.get(entitiesPlanted++), entityFactory.createEntity(type));
             }
         }
     }
