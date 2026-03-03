@@ -7,6 +7,7 @@ import v2.map.WorldMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class Renderer {
 
@@ -17,14 +18,14 @@ public class Renderer {
 
     public void draw() {
         Location location;
-        for (int x = 0; x < map.getHeight(); x++) {
-            for (int y = 0; y < map.getHeight(); y++) {
+        for (int y = 0; y < map.getHeight(); y++) {
+            for (int x = 0; x < map.getWidth(); x++) {
                 location = new Location(x, y);
-                Entity entity = map.getEntity(location);
-                if (entity == null) {
+                Optional<Entity> entity = map.getEntity(location);
+                if (entity.isEmpty()) {
                     System.out.print(" . ");
                 } else {
-                    System.out.print(drawEntity(entity));
+                    System.out.print(drawEntity(entity.get()));
                 }
             }
             System.out.println();
