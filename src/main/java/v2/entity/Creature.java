@@ -7,5 +7,7 @@ public abstract class Creature extends Entity {
     private int speed;
     private int hp;
 
-    public abstract Location makeMove(WorldMap map, Location location);
+    public void makeMove(WorldMap map, Location location) {
+        //map.getCurrentCoordinates(this)
+    }
 }
