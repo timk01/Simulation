@@ -1,35 +1,37 @@
 package v2;
 
 import v2.actions.Action;
+import v2.actions.MoveCreaturesAction;
 import v2.actions.PopulateMapAction;
-import v2.entity.*;
-import v2.map.Location;
 import v2.map.WorldMap;
 import v2.renderer.Renderer;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class Main2 {
     public static void main(String[] args) {
         WorldMap worldMap = new WorldMap(10, 10);
-
-        /*Location locationGrass = new Location(0, 0);
-        worldMap.tryAddEntity(locationGrass, new Grass());
-
-        Location locationTree = new Location(0, 5);
-        worldMap.tryAddEntity(locationTree, new Tree());
-
-        Location locationRock = new Location(5, 5);
-        worldMap.tryAddEntity(locationRock, new Rock());
-
-        Location locationHerbivore = new Location(9, 9);
-        worldMap.tryAddEntity(locationHerbivore, new Herbivore());
-
-        Location locationPredator = new Location(7, 7);
-        worldMap.tryAddEntity(locationPredator, new Predator());*/
-
-        Action action = new PopulateMapAction();
-        action.execute(worldMap);
-
         Renderer renderer = new Renderer(worldMap);
-        renderer.draw();
+
+        List<Action> actions = List.of(new PopulateMapAction(), new MoveCreaturesAction());
+        actions.get(0).execute(worldMap);
+        actions.get(1).execute(worldMap);
+/*        for (Action action : actions) {
+            action.execute(worldMap);
+        }*/
+
+
+        for (int i = 0; i < 10; i++) {
+            try {
+                actions.get(1).execute(worldMap);
+                System.out.println();
+                renderer.draw();
+                Thread.sleep(3000);
+            } catch (InterruptedException e) {
+                System.out.println("Thread was interrupted!");
+                Thread.currentThread().interrupt();
+            }
+        }
     }
 }

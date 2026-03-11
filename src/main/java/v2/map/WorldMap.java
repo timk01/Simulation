@@ -24,11 +24,11 @@ public class WorldMap {
             throw new NullPointerException("addEntity: entity cannot be null");
         }
 
-        if (!checkBorders(location)) {
+        if (!isInsideMap(location)) {
             throw new IllegalArgumentException("addEntity on: " + location + " - location out of bounds");
         }
 
-        if (isEmpty(location)) {
+        if (isCellFree(location)) {
             map.put(location, entity);
             return true;
         } else {
@@ -36,17 +36,24 @@ public class WorldMap {
         }
     }
 
-    private boolean checkBorders(Location location) {
+    public boolean isInsideMap(Location location) {
         return (location.x() >= 0 && location.x() < width) &&
                 (location.y() >= 0 && location.y() < height);
     }
 
-    private boolean isEmpty(Location location) {
+    public boolean isCellFree(Location location) {
         return getEntity(location).isEmpty();
     }
 
     public Optional<Entity> getEntity(Location location) {
         return Optional.ofNullable(map.get(location));
+    }
+
+    public void removeEntity(Location location) {
+        if (location == null) {
+            throw new NullPointerException("removeEntity: location cannot be null");
+        }
+        map.remove(location);
     }
 
     public int getWidth() {
