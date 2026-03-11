@@ -1,10 +1,12 @@
 package v2.actions;
 
+import org.simulation.config.SimulationConfig;
 import v2.entity.Creature;
 import v2.entity.Entity;
 import v2.entity.EntityType;
 import v2.map.Location;
 import v2.map.WorldMap;
+import v2.path.PathFinder;
 
 import java.util.HashMap;
 import java.util.List;
@@ -13,11 +15,17 @@ import java.util.Optional;
 
 public class MoveCreaturesAction implements Action {
 
+    private final PathFinder pathFinder;
+
+    public MoveCreaturesAction(PathFinder pathFinder) {
+        this.pathFinder = pathFinder;
+    }
+
     @Override
     public void execute(WorldMap map) {
         Map<Creature, Location> creatureLocationMap = fillCurrentMapSnapshot(map);
         for (Map.Entry<Creature, Location> creatureLocationEntry : creatureLocationMap.entrySet()) {
-            creatureLocationEntry.getKey().makeMove(map, creatureLocationEntry.getValue());
+            creatureLocationEntry.getKey().makeMove(map, creatureLocationEntry.getValue(), pathFinder);
         }
     }
 
