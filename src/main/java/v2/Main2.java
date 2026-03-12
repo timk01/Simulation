@@ -24,18 +24,18 @@ public class Main2 {
         List<Action> actions = List.of(new PopulateMapAction(), new MoveCreaturesAction(pathFinder));
         //actions.get(0).execute(worldMap);
         actions.get(1).execute(worldMap);
-/*        for (Action action : actions) {
+        for (Action action : actions) {
             action.execute(worldMap);
-        }*/
+        }
 
-        worldMap.tryAddEntity(new Location(2, 1), new Predator());
+/*        worldMap.tryAddEntity(new Location(2, 1), new Predator());
         worldMap.tryAddEntity(new Location(2, 2), new Herbivore());
         worldMap.tryAddEntity(new Location(1, 2), new Rock());
         worldMap.tryAddEntity(new Location(2, 3), new Rock());
         worldMap.tryAddEntity(new Location(3, 2), new Rock());
-        worldMap.tryAddEntity(new Location(0, 9), new Grass());
+        worldMap.tryAddEntity(new Location(0, 9), new Grass());*/
 
-        for (int i = 0; i < 2; i++) {
+        for (int i = 0; i < 15; i++) {
             try {
                 actions.get(1).execute(worldMap);
                 System.out.println();

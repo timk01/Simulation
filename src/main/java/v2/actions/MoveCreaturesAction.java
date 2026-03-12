@@ -25,8 +25,21 @@ public class MoveCreaturesAction implements Action {
     public void execute(WorldMap map) {
         Map<Creature, Location> creatureLocationMap = fillCurrentMapSnapshot(map);
         for (Map.Entry<Creature, Location> creatureLocationEntry : creatureLocationMap.entrySet()) {
+            if (isLocationMissed(map, creatureLocationEntry)) {
+                continue;
+            }
             creatureLocationEntry.getKey().makeMove(map, creatureLocationEntry.getValue(), pathFinder);
         }
+    }
+
+    private boolean isLocationMissed(WorldMap map, Map.Entry<Creature, Location> creatureLocationEntry) {
+        Creature currentCreature = creatureLocationEntry.getKey();
+        Location oldLocation = creatureLocationEntry.getValue();
+        Optional<Entity> entityBeforeMoving = map.getEntity(oldLocation);
+        if (entityBeforeMoving.isEmpty()) {
+            return true;
+        }
+        return !entityBeforeMoving.get().equals(currentCreature);
     }
 
     private Map<Creature, Location> fillCurrentMapSnapshot(WorldMap map) {
