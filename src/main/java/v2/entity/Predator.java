@@ -11,7 +11,7 @@ public final class Predator extends Creature {
     private int attack = 8;
 
     public Predator(int speed, int hp, int maxHp, int attack) {
-        super(speed, hp, maxHp);
+        super(3, hp, maxHp); //todo hardcoded
         this.attack = attack;
     }
 

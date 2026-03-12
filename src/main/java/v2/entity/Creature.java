@@ -9,7 +9,8 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public abstract class Creature extends Entity {
-    private int speed;
+    private static final int STEPS_LIMITER = 2;
+    private int speed = 2;
     private int hp = 10;
     private int maxHp = 20;
 
@@ -26,6 +27,12 @@ public abstract class Creature extends Entity {
     public Creature() {
     }
 
+    private enum StepResult {
+        MOVED,
+        ATTACKED,
+        NO_ACTION
+    }
+
     public int getSpeed() {
         return speed;
     }
@@ -40,24 +47,52 @@ public abstract class Creature extends Entity {
 
     public void makeMove(WorldMap map, Location oldLocation, PathFinder pathFinder) {
         Predicate<Entity> goal = isGoal();
-        List<Location> steps = pathFinder.findClosestPath(map, oldLocation, goal);
-        Location nextLocation;
-        if (!steps.isEmpty() && steps.size() >= 2) {
-            nextLocation = steps.get(1);
-        } else {
-            nextLocation = whereToStep(map, oldLocation);
-        }
+        Location currentLocation = oldLocation;
+        int stepsLeft = getSpeed();
 
-        if (oldLocation.equals(nextLocation)) {
-            return;
+        do {
+            List<Location> steps = pathFinder.findClosestPath(map, currentLocation, goal);
+
+            Location nextLocation;
+            if (!steps.isEmpty() && steps.size() >= STEPS_LIMITER) {
+                nextLocation = steps.get(1);
+            } else {
+                nextLocation = roam(map, currentLocation);
+            }
+
+            if (nextLocation.equals(currentLocation)) {
+                return;
+            }
+
+            checkLocations(map, currentLocation);
+
+            move(map, nextLocation, currentLocation, goal);
+
+            StepResult result = checkStepResult(map, nextLocation, goal);
+            if (result == StepResult.MOVED) {
+                currentLocation = nextLocation;
+                stepsLeft--;
+            } else if (result == StepResult.ATTACKED) {
+                stepsLeft--;
+            } else if (result == StepResult.NO_ACTION){
+                break;
+            }
+        } while (stepsLeft > 0);
+    }
+
+    private StepResult checkStepResult(WorldMap map, Location nextLocation, Predicate<Entity> goal) {
+        Optional<Entity> nextEntity = map.getEntity(nextLocation);
+        if (nextEntity.isPresent() && nextEntity.get().equals(this)) {
+            return StepResult.MOVED;
+        } else if (nextEntity.isPresent() && goal.test(nextEntity.get())) {
+            return StepResult.ATTACKED;
+        } else {
+            return StepResult.NO_ACTION;
         }
-        checkLocations(map, oldLocation);
-        move(map, nextLocation, oldLocation, goal);
     }
 
     void move(WorldMap map, Location nextLocation, Location oldLocation, Predicate<Entity> isGoal) {
-        boolean isCellFree = map.isCellFree(nextLocation);
-        if (isCellFree) {
+        if (map.isCellFree(nextLocation)) {
             map.removeEntity(oldLocation);
             map.tryAddEntity(nextLocation, this);
         } else if (isEntityPresent(map, nextLocation) && isGoal.test(getEntity(map, nextLocation))) {
@@ -68,7 +103,6 @@ public abstract class Creature extends Entity {
                 System.out.println("is oldLocRemoved: " + map.getEntity(oldLocation));
                 map.tryAddEntity(nextLocation, this);
                 System.out.println("is newLoc, placed: " + map.getEntity(nextLocation));
-
             }
         } else if (isEntityPresent(map, nextLocation) && !isGoal.test(getEntity(map, nextLocation))) {
             return;
@@ -90,7 +124,7 @@ public abstract class Creature extends Entity {
         }
     }
 
-    private Location whereToStep(WorldMap map, Location oldLocation) {
+    private Location roam(WorldMap map, Location oldLocation) {
         listOfClosestLocations = oldLocation.neighbourLocations();
         Collections.shuffle(listOfClosestLocations);
         List<Location> validMoves = makeValidMovesList(map);
