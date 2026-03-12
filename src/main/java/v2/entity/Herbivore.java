@@ -14,7 +14,7 @@ public final class Herbivore extends Creature {
     }*/
 
     @Override
-    Predicate<Entity> isGoal() {
+    public Predicate<Entity> isGoal() {
         return entity -> entity instanceof Grass;
     }
 }

@@ -3,8 +3,10 @@ package v2;
 import v2.actions.Action;
 import v2.actions.MoveCreaturesAction;
 import v2.actions.PopulateMapAction;
+import v2.entity.Grass;
 import v2.entity.Herbivore;
 import v2.entity.Predator;
+import v2.entity.Rock;
 import v2.map.Location;
 import v2.map.WorldMap;
 import v2.path.PathFinder;
@@ -26,10 +28,14 @@ public class Main2 {
             action.execute(worldMap);
         }*/
 
-        worldMap.tryAddEntity(new Location(0, 0), new Predator());
+        worldMap.tryAddEntity(new Location(2, 1), new Predator());
         worldMap.tryAddEntity(new Location(2, 2), new Herbivore());
+        worldMap.tryAddEntity(new Location(1, 2), new Rock());
+        worldMap.tryAddEntity(new Location(2, 3), new Rock());
+        worldMap.tryAddEntity(new Location(3, 2), new Rock());
+        worldMap.tryAddEntity(new Location(0, 9), new Grass());
 
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 2; i++) {
             try {
                 actions.get(1).execute(worldMap);
                 System.out.println();
@@ -41,18 +47,4 @@ public class Main2 {
             }
         }
     }
-
-
-/*        for (int i = 0; i < 10; i++) {
-            try {
-                actions.get(1).execute(worldMap);
-                System.out.println();
-                renderer.draw();
-                Thread.sleep(3000);
-            } catch (InterruptedException e) {
-                System.out.println("Thread was interrupted!");
-                Thread.currentThread().interrupt();
-            }
-        }
-    }*/
 }

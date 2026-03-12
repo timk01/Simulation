@@ -9,7 +9,7 @@ import java.util.function.Predicate;
 public final class Predator extends Creature {
 
     @Override
-    Predicate<Entity> isGoal() {
+    public Predicate<Entity> isGoal() {
         return entity -> entity instanceof Herbivore;
     }
 }
