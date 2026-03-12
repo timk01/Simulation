@@ -8,13 +8,22 @@ import java.util.function.Predicate;
 
 public final class Herbivore extends Creature {
 
-/*    @Override
-    public void makeMove(WorldMap map, Location location) {
-        super.makeMove(map, location);
-    }*/
+    public Herbivore(int speed, int hp, int maxHp) {
+        super(speed, hp, maxHp);
+    }
+
+    public Herbivore() {
+    }
 
     @Override
     public Predicate<Entity> isGoal() {
         return entity -> entity instanceof Grass;
+    }
+
+    @Override
+    boolean interactWithTarget(WorldMap map, Location targetEntityLocation, Entity target) {
+        map.removeEntity(targetEntityLocation);
+        heal(((Grass) target).getNutrition());
+        return true;
     }
 }

@@ -10,11 +10,33 @@ import java.util.stream.Collectors;
 
 public abstract class Creature extends Entity {
     private int speed;
-    private int hp;
+    private int hp = 10;
+    private int maxHp = 20;
 
     List<Location> listOfClosestLocations;
 
     Location prevLocation;
+
+    public Creature(int speed, int hp, int maxHp) {
+        this.speed = speed;
+        this.hp = hp;
+        this.maxHp = maxHp;
+    }
+
+    public Creature() {
+    }
+
+    public int getSpeed() {
+        return speed;
+    }
+
+    public int getHp() {
+        return hp;
+    }
+
+    public int getMaxHp() {
+        return maxHp;
+    }
 
     public void makeMove(WorldMap map, Location oldLocation, PathFinder pathFinder) {
         Predicate<Entity> goal = isGoal();
@@ -38,13 +60,27 @@ public abstract class Creature extends Entity {
         if (isCellFree) {
             map.removeEntity(oldLocation);
             map.tryAddEntity(nextLocation, this);
-        } else if (map.getEntity(nextLocation).isPresent() && isGoal.test(map.getEntity(nextLocation).get())) {
-            map.removeEntity(oldLocation); //съели траву//травоядное - интерктФизТаргет вместо простого ремува
-            map.removeEntity(nextLocation);
-            map.tryAddEntity(nextLocation, this);
-        } else if (map.getEntity(nextLocation).isPresent() && !isGoal.test(map.getEntity(nextLocation).get())) {
+        } else if (isEntityPresent(map, nextLocation) && isGoal.test(getEntity(map, nextLocation))) {
+            System.out.println("before interactWithTarget");
+            if (interactWithTarget(map, nextLocation, getEntity(map, nextLocation))) {
+                System.out.println("inside interactWithTarget: (hardcoded) " + true);
+                map.removeEntity(oldLocation);
+                System.out.println("is oldLocRemoved: " + map.getEntity(oldLocation));
+                map.tryAddEntity(nextLocation, this);
+                System.out.println("is newLoc, placed: " + map.getEntity(nextLocation));
+
+            }
+        } else if (isEntityPresent(map, nextLocation) && !isGoal.test(getEntity(map, nextLocation))) {
             return;
         }
+    }
+
+    private Entity getEntity(WorldMap map, Location nextLocation) {
+        return map.getEntity(nextLocation).get();
+    }
+
+    private boolean isEntityPresent(WorldMap map, Location nextLocation) {
+        return map.getEntity(nextLocation).isPresent();
     }
 
     private void checkLocations(WorldMap map, Location oldLocation) {
@@ -86,6 +122,24 @@ public abstract class Creature extends Entity {
     }
 
     public Predicate<Entity> isGoal() {
+        System.out.println("isGoal: " + Entity.class);
         return entity -> false;
+    }
+
+    abstract boolean interactWithTarget(WorldMap map, Location targetEntityLocation, Entity target);
+
+    public void heal(int healAmount) {
+        hp += healAmount;
+        if (hp >= maxHp) {
+            hp = maxHp;
+        }
+    }
+
+    public void takeDamage(int damageAmount) {
+        hp -= damageAmount;
+    }
+
+    public boolean isDead() {
+        return hp <= 0;
     }
 }
