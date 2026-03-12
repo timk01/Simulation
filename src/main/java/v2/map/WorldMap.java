@@ -1,10 +1,14 @@
 package v2.map;
 
 import v2.entity.Entity;
+import v2.entity.EntityType;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+
+import static v2.entity.EntityType.ROCK;
 
 public class WorldMap {
     private final Map<Location, Entity> map = new HashMap<>();
@@ -54,6 +58,13 @@ public class WorldMap {
             throw new NullPointerException("removeEntity: location cannot be null");
         }
         map.remove(location);
+    }
+
+    public int countEntityPerType(EntityType type) {
+        return  (int) map.values().stream()
+                .filter(Objects::nonNull)
+                .filter((entity) -> type.matches(entity))
+                .count();
     }
 
     public int getWidth() {

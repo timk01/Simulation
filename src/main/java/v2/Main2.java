@@ -1,12 +1,7 @@
 package v2;
 
-import v2.actions.Action;
-import v2.actions.MoveCreaturesAction;
-import v2.actions.PopulateMapAction;
-import v2.entity.Grass;
-import v2.entity.Herbivore;
-import v2.entity.Predator;
-import v2.entity.Rock;
+import v2.actions.*;
+import v2.entity.*;
 import v2.map.Location;
 import v2.map.WorldMap;
 import v2.path.PathFinder;
@@ -20,11 +15,22 @@ public class Main2 {
         WorldMap worldMap = new WorldMap(10, 10);
         Renderer renderer = new Renderer(worldMap);
         PathFinder pathFinder = new PathFinder();
+        EntityFactory entityFactory = new EntityFactory();
+        ActionHelper actionHelper = new ActionHelper(entityFactory);
 
-        List<Action> actions = List.of(new PopulateMapAction(), new MoveCreaturesAction(pathFinder));
-        actions.get(0).execute(worldMap);
-/*        actions.get(1).execute(worldMap);
-        for (Action action : actions) {
+
+        List<Action> initActions = List.of(
+                new PopulateMapAction(actionHelper));
+
+        List<Action> turnActions = List.of(
+                new MoveCreaturesAction(pathFinder),
+                new KeepPopulationStableAction(actionHelper));
+
+        initActions.get(0).execute(worldMap);
+
+        //actions.get(0).execute(worldMap);
+        //actions.get(1).execute(worldMap);
+/*        for (Action action : actions) {
             action.execute(worldMap);
         }*/
 
@@ -42,7 +48,10 @@ public class Main2 {
 
         for (int i = 0; i < 10; i++) {
             try {
-                actions.get(1).execute(worldMap);
+                //actions.get(1).execute(worldMap);
+                for (Action action : turnActions) {
+                    action.execute(worldMap);
+                }
                 System.out.println();
                 renderer.draw();
                 Thread.sleep(300);

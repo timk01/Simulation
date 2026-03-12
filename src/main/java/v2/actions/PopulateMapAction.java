@@ -14,15 +14,19 @@ import java.util.Optional;
 
 public class PopulateMapAction implements Action {
 
+    private ActionHelper actionHelper;
+
+    public PopulateMapAction(ActionHelper actionHelper) {
+        this.actionHelper = actionHelper;
+    }
+
     record EntityPlan(EntityType entityType, int quantity) {
 
     }
 
     @Override
     public void execute(WorldMap map) {
-        EntityFactory entityFactory = new EntityFactory();
-
-        List<Location> emptyLocations = fillEmptyLocationsList(map);
+        List<Location> emptyLocations = actionHelper.fillEmptyLocationsList(map);
         // TODO: добавить пресеты конфигурации (SMALL/MEDIUM/LARGE) с фиксированными counts и size; убрать хардкод "2"
         // todo: начать с базы 20*20 как в старом проекте - и боже тебя упаси ставить капы. просто хардкод на проработанные размеры
 
@@ -39,22 +43,9 @@ public class PopulateMapAction implements Action {
             EntityType type = entityPlan.entityType();
             int quantity = entityPlan.quantity();
             for (int i = 0; i < quantity; i++) {
-                map.tryAddEntity(emptyLocations.get(entitiesPlanted++), entityFactory.createEntity(type));
+                map.tryAddEntity(emptyLocations.get(entitiesPlanted++),
+                        actionHelper.getEntityFactory().createEntity(type));
             }
         }
-    }
-
-    private List<Location> fillEmptyLocationsList(WorldMap map) {
-        List<Location> freeLocations = new ArrayList<>();
-        Location location;
-        for (int y = 0; y < map.getHeight(); y++) {
-            for (int x = 0; x < map.getWidth(); x++) {
-                location = new Location(x, y);
-                if (map.getEntity(location).isEmpty()) {
-                    freeLocations.add(location);
-                }
-            }
-        }
-        return freeLocations;
     }
 }
