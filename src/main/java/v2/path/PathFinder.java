@@ -82,12 +82,16 @@ public class PathFinder {
             }
         }
 
-        if (!theRealPath.get(theRealPath.size() - 1).equals(initialLocation)) {
+        if (isAnEmptyList(initialLocation, theRealPath)) {
             return emptyList();
         }
 
         Collections.reverse(theRealPath);
         return theRealPath;
+    }
+
+    private boolean isAnEmptyList(Location initialLocation, List<Location> theRealPath) {
+        return !theRealPath.get(theRealPath.size() - 1).equals(initialLocation);
     }
 }
 

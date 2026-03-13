@@ -1,18 +1,22 @@
 package v2;
 
-import v2.actions.*;
-import v2.entity.*;
-import v2.map.Location;
-import v2.map.WorldMap;
-import v2.path.PathFinder;
-import v2.renderer.Renderer;
-
-import java.util.ArrayList;
-import java.util.List;
-
-public class Main2 {
+public class Starter {
     public static void main(String[] args) {
-        WorldMap worldMap = new WorldMap(10, 10);
+        SimulationApp simulationApp = new SimulationApp();
+        try {
+            simulationApp.runSimulation();
+        } catch (InterruptedException e) {
+            System.err.println("An error occurred in main while running simulation: " + e.getMessage());
+            e.printStackTrace();
+        }
+/*        WorldMap worldMap = new WorldMap(10, 10);
+        Renderer renderer = new Renderer(worldMap);
+        Controller controller = new Controller();
+        Simulation simulation = new Simulation(worldMap, renderer, controller);
+        Thread simThread = new Thread(simulation);
+        simThread.start();*/
+        //simulation.startSimulation();
+/*        WorldMap worldMap = new WorldMap(10, 10);
         Renderer renderer = new Renderer(worldMap);
         PathFinder pathFinder = new PathFinder();
         EntityFactory entityFactory = new EntityFactory();
@@ -26,7 +30,7 @@ public class Main2 {
                 new MoveCreaturesAction(pathFinder),
                 new KeepPopulationStableAction(actionHelper));
 
-        initActions.get(0).execute(worldMap);
+        initActions.get(0).execute(worldMap);*/
 
         //actions.get(0).execute(worldMap);
         //actions.get(1).execute(worldMap);
@@ -43,7 +47,7 @@ public class Main2 {
         //worldMap.tryAddEntity(new Location(0, 9), new Grass());
 
         //actions.get(1).execute(worldMap);
-        renderer.draw();
+/*        renderer.draw();
 
 
         for (int i = 0; i < 10; i++) {
@@ -59,6 +63,6 @@ public class Main2 {
                 System.out.println("Thread was interrupted!");
                 Thread.currentThread().interrupt();
             }
-        }
+        }*/
     }
 }

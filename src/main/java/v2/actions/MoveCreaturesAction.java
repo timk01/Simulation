@@ -36,10 +36,7 @@ public class MoveCreaturesAction implements Action {
         Creature currentCreature = creatureLocationEntry.getKey();
         Location oldLocation = creatureLocationEntry.getValue();
         Optional<Entity> entityBeforeMoving = map.getEntity(oldLocation);
-        if (entityBeforeMoving.isEmpty()) {
-            return true;
-        }
-        return !entityBeforeMoving.get().equals(currentCreature);
+        return entityBeforeMoving.map(entity -> !entity.equals(currentCreature)).orElse(true);
     }
 
     private Map<Creature, Location> fillCurrentMapSnapshot(WorldMap map) {
