@@ -11,6 +11,7 @@ import v2.renderer.Renderer;
 import java.util.ArrayList;
 import java.util.List;
 
+
 public class Simulation implements Runnable {
     private final WorldMap worldMap;
     private final Renderer consoleRenderer;
@@ -45,6 +46,7 @@ public class Simulation implements Runnable {
 
     public void startSimulation() {
         makeTurn(initActions);
+        PrintUtil.printHelp();
 
         while (running) {
             try {
@@ -60,6 +62,7 @@ public class Simulation implements Runnable {
                 return;
             }
             PrintUtil.printStatus(turnCounter);
+            PrintUtil.printCommandPrompt();
         }
     }
 

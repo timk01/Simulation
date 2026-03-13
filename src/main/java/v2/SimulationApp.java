@@ -2,6 +2,7 @@ package v2;
 
 import v2.console.ConsoleCommandSource;
 import v2.controller.Controller;
+import v2.dialogue.PrintUtil;
 import v2.map.WorldMap;
 import v2.renderer.Renderer;
 
@@ -14,7 +15,7 @@ public class SimulationApp {
         ConsoleCommandSource commandSource = new ConsoleCommandSource(scanner);
 
         while (continueSimulation) {
-            System.out.println("Начать новую симуляцию? Введите 'д' для начала или 'н' для выхода.");
+            PrintUtil.printYesNoAtSimulStart();
             if (!commandSource.askToStart()) {
                 continueSimulation = false;
                 continue;

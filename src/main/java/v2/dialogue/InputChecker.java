@@ -24,10 +24,10 @@ public final class InputChecker {
             return null;
         }
         char c = t.charAt(0);
-        if (c == 'д') {
+        if (c == ConsoleConfig.YES_BUTTON) {
             return true;
         }
-        if (c == 'н') {
+        if (c == ConsoleConfig.NO_BUTTON) {
             return false;
         }
         return null;

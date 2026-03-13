@@ -1,24 +1,27 @@
 package v2.dialogue;
 
+
 import java.util.Locale;
 import java.util.Map;
 
-public class ConsoleConfig {
-    public static final long MIN_PAUSE_BETWEEN_MOVES = 300L;
-    public static final int NON_BLOCKING_POLL_MS = 50;
+public final class ConsoleConfig {
+    public static final char PAUSE_BUTTON = 'ф';
+    public static final char RESUME_BUTTON = 'ы';
+    public static final char STEP_BUTTON = 'в';
+    public static final char STOP_BUTTON = 'ц';
+
+    public static final char YES_BUTTON = 'д';
+    public static final char NO_BUTTON = 'н';
+
     public static final Locale RU = Locale.forLanguageTag("ru");
 
-    public static final ChosenMap DEFAULT_MAP = ChosenMap.MEDIUM;
+    private ConsoleConfig() {
+    }
 
-    public static final Map<Character, ChosenCommand> COMMANDS = Map.of('ф', ChosenCommand.PAUSE,
-            'ы', ChosenCommand.RESUME,
-            'в', ChosenCommand.STEP,
-            'ц', ChosenCommand.STOP
-    );
-
-    public static final Map<Character, ChosenMap> MAP = Map.of(
-            '1', ChosenMap.SMALL,
-            '2', ChosenMap.MEDIUM,
-            '3', ChosenMap.LARGE
+    public static final Map<Character, ChosenCommand> COMMANDS = Map.of(
+            PAUSE_BUTTON, ChosenCommand.PAUSE,
+            RESUME_BUTTON, ChosenCommand.RESUME,
+            STEP_BUTTON, ChosenCommand.STEP,
+            STOP_BUTTON, ChosenCommand.STOP
     );
 }

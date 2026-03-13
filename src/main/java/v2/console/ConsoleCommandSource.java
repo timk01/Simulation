@@ -3,7 +3,6 @@ package v2.console;
 import v2.Simulation;
 import v2.controller.Controller;
 import v2.dialogue.*;
-import v2.settings.SimulationSettings;
 
 import java.util.Scanner;
 
@@ -31,7 +30,7 @@ public class ConsoleCommandSource implements CommandSource {
     @Override
     public void runProgram() {
         PrintUtil.greetings();
-        PrintUtil.printHelp();
+        PrintUtil.mapPreviewMsg();
 
         while (true) {
             if (!simulation.isRunning()) {
@@ -39,8 +38,6 @@ public class ConsoleCommandSource implements CommandSource {
                 return;
             }
 
-            //System.out.print("> " + System.lineSeparator());
-            //System.out.println("Команда (ф=пауза, ы=продолжить, в=ход, ц=выход)");
             Character key = getGuessedCharOrNull();
             if (key == null) {
                 simulation.stop();
@@ -51,20 +48,24 @@ public class ConsoleCommandSource implements CommandSource {
             ChosenCommand chosenCommand = ConsoleConfig.COMMANDS.get(key);
             switch (chosenCommand) {
                 case STOP -> {
-                    System.out.println("⏹ stop");
+                    PrintUtil.printSpecificCommand(chosenCommand);
+//                    PrintUtil.printCommandPrompt();
                     simulation.stop();
                     return;
                 }
                 case STEP -> {
-                    System.out.println("⏭ step");
+                    PrintUtil.printSpecificCommand(chosenCommand);
+//                    PrintUtil.printCommandPrompt();
                     simulation.nextTurn();
                 }
                 case PAUSE -> {
-                    System.out.println("⏸ pause");
+                    PrintUtil.printSpecificCommand(chosenCommand);
+//                    PrintUtil.printCommandPrompt();
                     simulation.pauseSimulation();
                 }
                 case RESUME -> {
-                    System.out.println("▶ resume");
+                    PrintUtil.printSpecificCommand(chosenCommand);
+//                    PrintUtil.printCommandPrompt();
                     simulation.resumeSimulation();
                 }
             }
@@ -91,7 +92,7 @@ public class ConsoleCommandSource implements CommandSource {
             if (properInput.length() == 1 && InputChecker.isKeyAllowed(properInput.charAt(0), ConsoleConfig.COMMANDS)) {
                 return properInput.charAt(0);
             }
-            System.out.println("Некорректный ввод ->");
+            PrintUtil.printInvalidInput();
         } while (true);
     }
 
@@ -108,45 +109,21 @@ public class ConsoleCommandSource implements CommandSource {
             if (properSymbol != null) {
                 return properSymbol;
             }
-            System.out.println("Некорректный ввод. Пожалуйста, введите 'д' или 'н'.");
+            PrintUtil.printInvalidYesNoInput();
         }
     }
 
-    public ChosenMap askMap() {
-        String word;
 
-        while (true) {
-            PrintUtil.printMapInfo();
-            System.out.print("> ");
-            word = readTrimmedOrNull();
-            if (word == null || word.isEmpty()) {
-                return ConsoleConfig.DEFAULT_MAP;
-            }
-
-            if (word.length() > 1) {
-                System.out.println("Некорректный ввод ->");
-                continue;
-            }
-
-            char number = word.charAt(0);
-            if (!Character.isDigit(number)) {
-                System.out.println("Некорректный ввод ->");
-                continue;
-            }
-
-            ChosenMap chosenMapCommand = ConsoleConfig.MAP.get(number);
-            if (chosenMapCommand != null) {
-                return chosenMapCommand;
-            }
-            System.out.println("Некорректный ввод ->");
-        }
+    private String readTrimmedOrNull() {
+        return scanner.hasNextLine() ? scanner.nextLine().trim() : null;
     }
+
 
     public Integer askIntValue(int min, int max) {
         String number;
 
         while (true) {
-            System.out.println("Нужно ввести число (enter = оставить по-умолчанию)");
+            PrintUtil.printAskNumberOrEnter();
             number = readTrimmedOrNull();
             if (number == null || number.isEmpty()) {
                 return null;
@@ -156,18 +133,21 @@ public class ConsoleCommandSource implements CommandSource {
                 if (i >= min && i <= max) {
                     return i;
                 } else {
-                    System.out.printf("Число вне диапазона (%d..%d). Повторите ввод.%n", min, max);
+                    PrintUtil.printOutOfRange(min, max);
                 }
             } catch (NumberFormatException ignored) {
             }
         }
     }
 
-    private String readTrimmedOrNull() {
-        return scanner.hasNextLine() ? scanner.nextLine().trim() : null;
+    public void close() {
+        try {
+            scanner.close();
+        } catch (IllegalStateException e) {
+            throw new IllegalArgumentException("IllegalStateException is thrown while closing scanner: " + e);
+        }
     }
-
-    public record StartOptions(ChosenMap map, SimulationSettings settings) {
+/*    public record StartOptions(ChosenMap map, SimulationSettings settings) {
 
     }
 
@@ -195,13 +175,34 @@ public class ConsoleCommandSource implements CommandSource {
         }
 
         return new StartOptions(chosen, settings);
-    }
+    }*/
+    /*    public ChosenMap askMap() {
+            String word;
 
-    public void close() {
-        try {
-            scanner.close();
-        } catch (IllegalStateException e) {
-            throw new IllegalArgumentException("IllegalStateException is thrown while closing scanner: " + e);
-        }
-    }
+            while (true) {
+                PrintUtil.printMapInfo();
+                System.out.print("> ");
+                word = readTrimmedOrNull();
+                if (word == null || word.isEmpty()) {
+                    return ConsoleConfig.DEFAULT_MAP;
+                }
+
+                if (word.length() > 1) {
+                    System.out.println("Некорректный ввод ->");
+                    continue;
+                }
+
+                char number = word.charAt(0);
+                if (!Character.isDigit(number)) {
+                    System.out.println("Некорректный ввод ->");
+                    continue;
+                }
+
+                ChosenMap chosenMapCommand = ConsoleConfig.MAP.get(number);
+                if (chosenMapCommand != null) {
+                    return chosenMapCommand;
+                }
+                System.out.println("Некорректный ввод ->");
+            }
+        }*/
 }
