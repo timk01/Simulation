@@ -1,9 +1,7 @@
 package v2.actions;
 
-import v2.entity.Entity;
-import v2.entity.EntityFactory;
-import v2.entity.EntityType;
-import v2.entity.Tree;
+import v2.config.EntitiesPreset;
+import v2.entity.*;
 import v2.map.Location;
 import v2.map.WorldMap;
 
@@ -16,8 +14,11 @@ public class PopulateMapAction implements Action {
 
     private ActionHelper actionHelper;
 
-    public PopulateMapAction(ActionHelper actionHelper) {
+    private EntitiesPreset entitiesPreset;
+
+    public PopulateMapAction(ActionHelper actionHelper, EntitiesPreset entitiesPreset) {
         this.actionHelper = actionHelper;
+        this.entitiesPreset = entitiesPreset;
     }
 
     record EntityPlan(EntityType entityType, int quantity) {
@@ -27,15 +28,12 @@ public class PopulateMapAction implements Action {
     @Override
     public void execute(WorldMap map) {
         List<Location> emptyLocations = actionHelper.fillEmptyLocationsList(map);
-        // TODO: добавить пресеты конфигурации (SMALL/MEDIUM/LARGE) с фиксированными counts и size; убрать хардкод "2"
-        // todo: начать с базы 20*20 как в старом проекте - и боже тебя упаси ставить капы. просто хардкод на проработанные размеры
 
         Collections.shuffle(emptyLocations);
 
         List<EntityPlan> planList = new ArrayList<>();
         for (EntityType entityType : EntityType.values()) {
-            planList.add(new EntityPlan(entityType, 2));
-            //toDo 2 - приходит из общего конфига как каунтер существ (максимальный)
+            planList.add(new EntityPlan(entityType, getTypeQuantity(entityType)));
         }
 
         int entitiesPlanted = 0;
@@ -47,5 +45,15 @@ public class PopulateMapAction implements Action {
                         actionHelper.getEntityFactory().createEntity(type));
             }
         }
+    }
+
+    private int getTypeQuantity(EntityType entityType) {
+        return switch (entityType) {
+            case ROCK -> entitiesPreset.getStartStonesQuantity();
+            case GRASS -> entitiesPreset.getStartGrassQuantity();
+            case TREE -> entitiesPreset.getStartTreeQuantity();
+            case HERBIVORE -> entitiesPreset.getStartHerbivoresQuantity();
+            case PREDATOR -> entitiesPreset.getStartPredatorsQuantity();
+        };
     }
 }

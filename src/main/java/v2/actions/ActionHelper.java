@@ -1,7 +1,6 @@
 package v2.actions;
 
 import v2.entity.EntityFactory;
-import v2.entity.EntityType;
 import v2.map.Location;
 import v2.map.WorldMap;
 

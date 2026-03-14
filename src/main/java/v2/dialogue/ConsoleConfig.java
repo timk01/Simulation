@@ -5,6 +5,10 @@ import java.util.Locale;
 import java.util.Map;
 
 public final class ConsoleConfig {
+    public static final int SMALL_PRESET_KEY = 1;
+    public static final int MEDIUM_PRESET_KEY = 2;
+    public static final int LARGE_PRESET_KEY = 3;
+
     public static final char PAUSE_BUTTON = 'ф';
     public static final char RESUME_BUTTON = 'ы';
     public static final char STEP_BUTTON = 'в';
@@ -15,7 +19,7 @@ public final class ConsoleConfig {
 
     public static final Locale RU = Locale.forLanguageTag("ru");
 
-    private ConsoleConfig() {
+    public ConsoleConfig() {
     }
 
     public static final Map<Character, ChosenCommand> COMMANDS = Map.of(

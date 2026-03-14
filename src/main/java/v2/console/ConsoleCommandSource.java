@@ -1,9 +1,11 @@
 package v2.console;
 
 import v2.Simulation;
+import v2.config.StarterSimulationPreset;
 import v2.controller.Controller;
 import v2.dialogue.*;
 
+import java.util.Optional;
 import java.util.Scanner;
 
 public class ConsoleCommandSource implements CommandSource {
@@ -49,23 +51,19 @@ public class ConsoleCommandSource implements CommandSource {
             switch (chosenCommand) {
                 case STOP -> {
                     PrintUtil.printSpecificCommand(chosenCommand);
-//                    PrintUtil.printCommandPrompt();
                     simulation.stop();
                     return;
                 }
                 case STEP -> {
                     PrintUtil.printSpecificCommand(chosenCommand);
-//                    PrintUtil.printCommandPrompt();
                     simulation.nextTurn();
                 }
                 case PAUSE -> {
                     PrintUtil.printSpecificCommand(chosenCommand);
-//                    PrintUtil.printCommandPrompt();
                     simulation.pauseSimulation();
                 }
                 case RESUME -> {
                     PrintUtil.printSpecificCommand(chosenCommand);
-//                    PrintUtil.printCommandPrompt();
                     simulation.resumeSimulation();
                 }
             }
@@ -118,27 +116,59 @@ public class ConsoleCommandSource implements CommandSource {
         return scanner.hasNextLine() ? scanner.nextLine().trim() : null;
     }
 
+    public Optional<Integer> askIntOrEnter(int min, int max) {
+        while (true) {
+            PrintUtil.printAskNumberOrEnter();
+            String value = readTrimmedOrNull();
 
-    public Integer askIntValue(int min, int max) {
+            if (value == null || value.isEmpty()) {
+                return Optional.empty();
+            }
+
+            if (value.length() > 1) {
+                System.out.println("Некорректный ввод ->");
+                continue;
+            }
+
+            char ch = value.charAt(0);
+
+            if (!Character.isDigit(ch)) {
+                System.out.println("Некорректный ввод ->");
+                continue;
+            }
+
+            int number = Character.getNumericValue(ch);
+
+            if (number >= min && number <= max) {
+                return Optional.of(number);
+            }
+
+            PrintUtil.printOutOfRange(min, max);
+        }
+    }
+
+/*    public Optional<Integer> askIntOrEnter(int min, int max) {
         String number;
 
         while (true) {
             PrintUtil.printAskNumberOrEnter();
             number = readTrimmedOrNull();
             if (number == null || number.isEmpty()) {
-                return null;
+                return Optional.empty();
             }
             try {
                 int i = Integer.parseInt(number);
                 if (i >= min && i <= max) {
-                    return i;
+                    return Optional.of(i);
                 } else {
                     PrintUtil.printOutOfRange(min, max);
                 }
-            } catch (NumberFormatException ignored) {
+            } catch (NumberFormatException e) {
+                System.out.println("NumberFormatException while parsing number in ConsoleCommandSource " + e);
+                e.printStackTrace();
             }
         }
-    }
+    }*/
 
     public void close() {
         try {

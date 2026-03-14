@@ -8,10 +8,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-import static v2.entity.EntityType.ROCK;
-
 public class WorldMap {
-    private final Map<Location, Entity> map = new HashMap<>();
+    private final Map<Location, Entity> entityMap = new HashMap<>();
     private final int width;
     private final int height;
 
@@ -21,6 +19,17 @@ public class WorldMap {
     }
 
     public boolean tryAddEntity(Location location, Entity entity) {
+        checkEntityAndLocation(location, entity);
+
+        if (isCellFree(location)) {
+            entityMap.put(location, entity);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    private void checkEntityAndLocation(Location location, Entity entity) {
         if (location == null) {
             throw new NullPointerException("addEntity: location cannot be null");
         }
@@ -30,13 +39,6 @@ public class WorldMap {
 
         if (!isInsideMap(location)) {
             throw new IllegalArgumentException("addEntity on: " + location + " - location out of bounds");
-        }
-
-        if (isCellFree(location)) {
-            map.put(location, entity);
-            return true;
-        } else {
-            return false;
         }
     }
 
@@ -50,21 +52,18 @@ public class WorldMap {
     }
 
     public Optional<Entity> getEntity(Location location) {
-        return Optional.ofNullable(map.get(location));
+        return Optional.ofNullable(entityMap.get(location));
     }
 
     public void removeEntity(Location location) {
         if (location == null) {
             throw new NullPointerException("removeEntity: location cannot be null");
         }
-        map.remove(location);
+        entityMap.remove(location);
     }
 
-    public int countEntityPerType(EntityType type) {
-        return  (int) map.values().stream()
-                .filter(Objects::nonNull)
-                .filter((entity) -> type.matches(entity))
-                .count();
+    public Map<Location, Entity> getMapSnapshot() {
+        return new HashMap<>(entityMap);
     }
 
     public int getWidth() {

@@ -1,6 +1,10 @@
 package v2;
 
 import v2.actions.*;
+import v2.config.EntitiesPreset;
+import v2.config.EntityStatsPreset;
+import v2.config.RepopulatePreset;
+import v2.config.StarterSimulationPreset;
 import v2.controller.Controller;
 import v2.dialogue.PrintUtil;
 import v2.entity.EntityFactory;
@@ -13,14 +17,15 @@ import java.util.List;
 
 
 public class Simulation implements Runnable {
+    private final StarterSimulationPreset simulationPreset;
     private final WorldMap worldMap;
     private final Renderer consoleRenderer;
     private List<Action> initActions = new ArrayList<>();
     private List<Action> turnActions = new ArrayList<>();
     private int turnCounter;
 
-    private final ActionHelper actionHelper;
-    private final EntityFactory entityFactory;
+    private ActionHelper actionHelper;
+    private EntityFactory entityFactory;
 
     private final PathFinder pathFinder;
 
@@ -28,20 +33,26 @@ public class Simulation implements Runnable {
 
     private volatile boolean running = true;
 
-    public Simulation(WorldMap map, Renderer renderer, Controller controller) {
+    public Simulation(WorldMap map, Renderer renderer, Controller controller, StarterSimulationPreset simulationPreset) {
         this.worldMap = map;
         this.consoleRenderer = renderer;
+        this.controller = controller;
+        this.simulationPreset = simulationPreset;
 
-        this.entityFactory = new EntityFactory();
+        EntityStatsPreset entityStatsPreset = simulationPreset.getEntityStatsPreset();
+        this.entityFactory = new EntityFactory(entityStatsPreset);
         this.actionHelper = new ActionHelper(entityFactory);
+
+        EntitiesPreset entitiesPreset = simulationPreset.getEntitiesPreset();
         this.initActions = List.of(
-                new PopulateMapAction(actionHelper));
+                new PopulateMapAction(actionHelper, entitiesPreset));
+
         this.pathFinder = new PathFinder();
+        RepopulatePreset repopulatePreset = simulationPreset.getRepopulatePreset();
         this.turnActions = List.of(
                 new MoveCreaturesAction(pathFinder),
-                new KeepPopulationStableAction(actionHelper));
+                new KeepPopulationStableAction(actionHelper, repopulatePreset));
 
-        this.controller = controller;
     }
 
     public void startSimulation() {
@@ -55,10 +66,15 @@ public class Simulation implements Runnable {
                 Thread.currentThread().interrupt();
                 return;
             }
+
+            if (!running) {
+                return;
+            }
+
             incrementCounter();
             makeTurn(turnActions);
             delay();
-            if (Thread.currentThread().isInterrupted()) {
+            if (!running || Thread.currentThread().isInterrupted()) {
                 return;
             }
             PrintUtil.printStatus(turnCounter);
