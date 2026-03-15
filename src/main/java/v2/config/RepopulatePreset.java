@@ -8,9 +8,9 @@ public enum RepopulatePreset {
     private final int herbivoreMin;
 
     RepopulatePreset(int grassMin, int herbivoreMin) {
-        validateRepopulateStats();
         this.grassMin = grassMin;
         this.herbivoreMin = herbivoreMin;
+        validateRepopulateStats();
     }
 
     private void validateRepopulateStats() {

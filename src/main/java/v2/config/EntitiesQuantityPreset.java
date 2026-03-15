@@ -16,12 +16,12 @@ public enum EntitiesQuantityPreset {
                            int startGrassQuantity,
                            int startHerbivoresQuantity,
                            int startPredatorsQuantity) {
-        validateEntityQuantity(startTreeQuantity, startStonesQuantity, startGrassQuantity, startHerbivoresQuantity, startPredatorsQuantity);
         this.startTreeQuantity = startTreeQuantity;
         this.startStonesQuantity = startStonesQuantity;
         this.startGrassQuantity = startGrassQuantity;
         this.startHerbivoresQuantity = startHerbivoresQuantity;
         this.startPredatorsQuantity = startPredatorsQuantity;
+        validateEntityQuantity(startTreeQuantity, startStonesQuantity, startGrassQuantity, startHerbivoresQuantity, startPredatorsQuantity);
     }
 
     private void validateEntityQuantity(int startTreeQuantity, int startStonesQuantity, int startGrassQuantity, int startHerbivoresQuantity, int startPredatorsQuantity) {

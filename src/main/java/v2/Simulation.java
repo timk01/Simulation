@@ -31,7 +31,7 @@ public class Simulation implements Runnable {
         ActionHelper actionHelper = new ActionHelper(entityFactory);
 
         this.initActions = List.of(
-                new PopulateMapAction(actionHelper, simulationPreset.getEntitiesPreset()));
+                new PopulateMapAction(actionHelper, simulationPreset.getEntitiesQuantityPreset()));
 
         this.turnActions = List.of(
                 new MoveCreaturesAction(new PathFinder()),

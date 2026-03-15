@@ -32,7 +32,6 @@ public class ConsoleCommandSource implements CommandSource {
 
     @Override
     public void runProgram() {
-        PrintUtil.greetings();
         PrintUtil.mapPreviewMsg();
 
         while (true) {

@@ -22,10 +22,10 @@ public enum EntityStatsPreset {
     private final GrassStats grass;
 
     EntityStatsPreset(HerbivoreStats herbivore, PredatorStats predator, GrassStats grass) {
-        validateEntityStats();
         this.herbivore = herbivore;
         this.predator = predator;
         this.grass = grass;
+        validateEntityStats();
     }
 
     private void validateEntityStats() {

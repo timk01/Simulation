@@ -16,6 +16,7 @@ public class SimulationApp {
         boolean continueSimulation = true;
         Scanner scanner = new Scanner(System.in);
         ConsoleCommandSource commandSource = new ConsoleCommandSource(scanner);
+        PrintUtil.greetings();
 
         while (continueSimulation) {
             PrintUtil.printYesNoAtSimulationStart();
