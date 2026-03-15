@@ -9,8 +9,15 @@ public enum WorldMapPreset {
     private final int height;
 
     WorldMapPreset(int width, int height) {
+        validateMapSize();
         this.width = width;
         this.height = height;
+    }
+
+    private void validateMapSize() {
+        if (width <= 0 || height <= 0) {
+            throw new IllegalArgumentException("maps size quantities must be positive");
+        }
     }
 
     public int getWidth() {

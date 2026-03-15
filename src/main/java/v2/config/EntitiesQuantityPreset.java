@@ -16,11 +16,22 @@ public enum EntitiesQuantityPreset {
                            int startGrassQuantity,
                            int startHerbivoresQuantity,
                            int startPredatorsQuantity) {
+        validateEntityQuantity(startTreeQuantity, startStonesQuantity, startGrassQuantity, startHerbivoresQuantity, startPredatorsQuantity);
         this.startTreeQuantity = startTreeQuantity;
         this.startStonesQuantity = startStonesQuantity;
         this.startGrassQuantity = startGrassQuantity;
         this.startHerbivoresQuantity = startHerbivoresQuantity;
         this.startPredatorsQuantity = startPredatorsQuantity;
+    }
+
+    private void validateEntityQuantity(int startTreeQuantity, int startStonesQuantity, int startGrassQuantity, int startHerbivoresQuantity, int startPredatorsQuantity) {
+        if (startTreeQuantity < 0
+                || startStonesQuantity < 0
+                || startGrassQuantity < 0
+                || startHerbivoresQuantity < 0
+                || startPredatorsQuantity < 0) {
+            throw new IllegalArgumentException("entity start quantities cannot be negative");
+        }
     }
 
     public int getStartTreeQuantity() {

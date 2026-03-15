@@ -8,8 +8,15 @@ public enum RepopulatePreset {
     private final int herbivoreMin;
 
     RepopulatePreset(int grassMin, int herbivoreMin) {
+        validateRepopulateStats();
         this.grassMin = grassMin;
         this.herbivoreMin = herbivoreMin;
+    }
+
+    private void validateRepopulateStats() {
+        if (grassMin <= 0 || herbivoreMin <= 0) {
+            throw new IllegalArgumentException("grassMin and herbivoreMin stat must be positive");
+        }
     }
 
     public int getGrassMin() {
