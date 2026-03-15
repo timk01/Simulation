@@ -60,7 +60,7 @@ _О том как симуляцию запустить, как все это д
 0. Проект расположен https://github.com/timk01/Simulation
 1. Скачайте его тем или иным способом: как архив или - склонируйте (SSH/HTTPS)
 2. Откройте проект в IntelliJ IDEA / Eclipse / другой IDE
-3. Запустите класс **`org.simulation.Starter`**
+3. Запустите класс **`v2.Starter`**
 4. В консоли следуйте подсказкам (см. ниже).
 
 ---
@@ -161,10 +161,35 @@ P - хищник, H - травоядное, G - трава, T - дерево, R 
 - Можно переключиться в ту ветку:
   ```bash
    git checkout 5b25ec2
+  ```
+  (не обращайте внимание на сообщение типа You are in 'detached HEAD' state.)
 - Можно переключиться обратно:
   ```bash
    git checkout main
-- Запускать симуляцию стандартным образом из мейна
+- Запускать симуляцию стандартным образом из мейна класса Simulation (если вы переключились из предыдущей версии - через конфигурацию или просто провалившись в файл стартер, по зеленой кнопке)
 ---
+
+</details>
+
+<details>
+  <summary>Скриншоты.</summary>
+
+### Начало игры
+
+![gamewelcome&start](docs/screenshots/gamewelcome&start.png)
+
+### Выбор и отображение начальных пресетов
+
+![small](docs/screenshots/small_preset.png)
+
+![middle](docs/screenshots/middle_preset.png)
+
+![large](docs/screenshots/large_preset.png)
+
+![large](docs/screenshots/large_preset.png)
+
+### Контроль в одной симуляции
+
+![logs.png](docs/screenshots/control.png)
 
 </details>
