@@ -178,7 +178,7 @@ P - хищник, H - травоядное, G - трава, T - дерево, R 
 
 ![gamewelcome&start](docs/screenshots/gamewelcome&start.png)
 
-### Выбор и отображение начальных пресетов
+### Выбор и отображение начальных пресетов (1 - 2 - 3)
 
 ![small](docs/screenshots/small_preset.png)
 
@@ -186,10 +186,12 @@ P - хищник, H - травоядное, G - трава, T - дерево, R 
 
 ![large](docs/screenshots/large_preset.png)
 
-![large](docs/screenshots/large_preset.png)
-
-### Контроль в одной симуляции
+### Контроль в одной симуляции с вводом команд (ф - ы - в - ц)
 
 ![logs.png](docs/screenshots/control.png)
+
+### Заавершение игры и начало новой (д - н)
+
+![end&start.png](docs/screenshots/end&start.png)
 
 </details>
