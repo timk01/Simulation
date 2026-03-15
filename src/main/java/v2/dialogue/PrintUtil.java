@@ -6,12 +6,11 @@ final public class PrintUtil {
     }
 
     public static void mapPreviewMsg() {
-        System.out.println("Карта при первой расстановке: ");
+        System.out.println("Карта при начальной расстановке: ");
     }
 
     public static void printHelp() {
         System.out.printf("""
-                
                 Управление [русская раскладка WASD]:
                   %s = пауза
                   %s = продолжить, пока не будет сделана пауза или выход
@@ -36,6 +35,7 @@ final public class PrintUtil {
     public static void printStatus(int moves) {
         System.out.printf("""
                 ────═ Ход: %d ═────
+                
                 """, moves);
     }
 

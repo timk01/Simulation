@@ -34,6 +34,7 @@ public class Renderer {
             }
             System.out.println();
         }
+        System.out.println();
     }
 
     private String drawEntity(Entity entity) {

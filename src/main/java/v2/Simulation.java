@@ -60,12 +60,12 @@ public class Simulation implements Runnable {
             }
 
             incrementCounter();
+            PrintUtil.printStatus(turnCounter);
             makeTurn(turnActions);
             delay();
             if (!running || Thread.currentThread().isInterrupted()) {
                 return;
             }
-            PrintUtil.printStatus(turnCounter);
             PrintUtil.printCommandPrompt();
         }
     }
