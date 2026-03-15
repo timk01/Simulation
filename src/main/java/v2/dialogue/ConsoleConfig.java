@@ -1,6 +1,5 @@
 package v2.dialogue;
 
-
 import java.util.Locale;
 import java.util.Map;
 
@@ -19,7 +18,7 @@ public final class ConsoleConfig {
 
     public static final Locale RU = Locale.forLanguageTag("ru");
 
-    public ConsoleConfig() {
+    private ConsoleConfig() {
     }
 
     public static final Map<Character, ChosenCommand> COMMANDS = Map.of(

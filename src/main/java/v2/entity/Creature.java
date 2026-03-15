@@ -4,33 +4,26 @@ import v2.map.Location;
 import v2.map.WorldMap;
 import v2.path.PathFinder;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public abstract class Creature extends Entity {
     private static final int STEPS_LIMITER = 2;
-    private int speed = 2;
-    private int hp = 10;
-    private int maxHp = 20;
 
-    List<Location> listOfClosestLocations;
+    private final int speed;
+    private int hp;
+    private final int maxHp;
 
-    Location prevLocation;
+    private Location prevLocation;
 
     public Creature(int speed, int hp, int maxHp) {
         this.speed = speed;
         this.hp = hp;
         this.maxHp = maxHp;
-    }
-
-    public Creature() {
-    }
-
-    private enum StepResult {
-        MOVED,
-        ATTACKED,
-        NO_ACTION
     }
 
     public int getSpeed() {
@@ -41,93 +34,45 @@ public abstract class Creature extends Entity {
         return hp;
     }
 
-    public int getMaxHp() {
-        return maxHp;
-    }
-
-    public void makeMove(WorldMap map, Location oldLocation, PathFinder pathFinder) {
+    public void makeMove(WorldMap worldMap, Location oldLocation, PathFinder pathFinder) {
         Predicate<Entity> goal = isGoal();
         Location currentLocation = oldLocation;
         int stepsLeft = getSpeed();
 
         do {
-            List<Location> steps = pathFinder.findClosestPath(map, currentLocation, goal);
+            List<Location> steps = pathFinder.findPath(worldMap, currentLocation, goal);
 
             Location nextLocation;
             if (!steps.isEmpty() && steps.size() >= STEPS_LIMITER) {
                 nextLocation = steps.get(1);
             } else {
-                nextLocation = roam(map, currentLocation);
+                nextLocation = roam(worldMap, currentLocation);
             }
 
             if (nextLocation.equals(currentLocation)) {
                 return;
             }
 
-            checkLocations(map, currentLocation);
+            checkLocations(worldMap, currentLocation);
 
-            move(map, nextLocation, currentLocation, goal);
+            move(worldMap, nextLocation, currentLocation, goal);
 
-            StepResult result = checkStepResult(map, nextLocation, goal);
+            StepResult result = checkStepResult(worldMap, nextLocation, goal);
             if (result == StepResult.MOVED) {
                 currentLocation = nextLocation;
                 stepsLeft--;
             } else if (result == StepResult.ATTACKED) {
                 stepsLeft--;
-            } else if (result == StepResult.NO_ACTION){
+            } else if (result == StepResult.NO_ACTION) {
                 break;
             }
         } while (stepsLeft > 0);
     }
 
-    private StepResult checkStepResult(WorldMap map, Location nextLocation, Predicate<Entity> goal) {
-        Optional<Entity> nextEntity = map.getEntity(nextLocation);
-        if (nextEntity.isPresent() && nextEntity.get().equals(this)) {
-            return StepResult.MOVED;
-        } else if (nextEntity.isPresent() && goal.test(nextEntity.get())) {
-            return StepResult.ATTACKED;
-        } else {
-            return StepResult.NO_ACTION;
-        }
-    }
-
-    void move(WorldMap map, Location nextLocation, Location oldLocation, Predicate<Entity> isGoal) {
-        if (map.isCellFree(nextLocation)) {
-            map.removeEntity(oldLocation);
-            map.tryAddEntity(nextLocation, this);
-        } else if (isEntityPresent(map, nextLocation) && isGoal.test(getEntity(map, nextLocation))) {
-            System.out.println("before interactWithTarget");
-            if (interactWithTarget(map, nextLocation, getEntity(map, nextLocation))) {
-                System.out.println("inside interactWithTarget: (hardcoded) " + true);
-                map.removeEntity(oldLocation);
-                System.out.println("is oldLocRemoved: " + map.getEntity(oldLocation));
-                map.tryAddEntity(nextLocation, this);
-                System.out.println("is newLoc, placed: " + map.getEntity(nextLocation));
-            }
-        } else if (isEntityPresent(map, nextLocation) && !isGoal.test(getEntity(map, nextLocation))) {
-            return;
-        }
-    }
-
-    private Entity getEntity(WorldMap map, Location nextLocation) {
-        return map.getEntity(nextLocation).get();
-    }
-
-    private boolean isEntityPresent(WorldMap map, Location nextLocation) {
-        return map.getEntity(nextLocation).isPresent();
-    }
-
-    private void checkLocations(WorldMap map, Location oldLocation) {
-        Optional<Entity> entity = map.getEntity(oldLocation);
-        if (!(entity.isPresent() && entity.get().equals(this))) {
-            throw new IllegalStateException("the creature is expected at " + oldLocation);
-        }
-    }
-
-    private Location roam(WorldMap map, Location oldLocation) {
-        listOfClosestLocations = oldLocation.neighbourLocations();
+    private Location roam(WorldMap worldMap, Location oldLocation) {
+        List<Location> listOfClosestLocations = oldLocation.neighbourLocations();
         Collections.shuffle(listOfClosestLocations);
-        List<Location> validMoves = makeValidMovesList(map);
+        List<Location> validMoves = makeValidMovesList(worldMap, listOfClosestLocations);
         validMoves = filterValidMoves(validMoves);
         if (validMoves.isEmpty()) {
             return oldLocation;
@@ -137,10 +82,10 @@ public abstract class Creature extends Entity {
         return validMoves.get(0);
     }
 
-    private List<Location> makeValidMovesList(WorldMap map) {
+    private List<Location> makeValidMovesList(WorldMap worldMap, List<Location> listOfClosestLocations) {
         List<Location> validMoves = new ArrayList<>();
         for (Location nearby : listOfClosestLocations) {
-            if (map.isInsideMap(nearby) && map.isCellFree(nearby)) {
+            if (worldMap.isInsideMap(nearby) && worldMap.isCellFree(nearby)) {
                 validMoves.add(nearby);
             }
         }
@@ -160,7 +105,54 @@ public abstract class Creature extends Entity {
         return entity -> false;
     }
 
-    abstract boolean interactWithTarget(WorldMap map, Location targetEntityLocation, Entity target);
+    private void checkLocations(WorldMap worldMap, Location oldLocation) {
+        Optional<Entity> entity = worldMap.getEntity(oldLocation);
+        if (!(entity.isPresent() && entity.get().equals(this))) {
+            throw new IllegalStateException("the creature is expected at " + oldLocation);
+        }
+    }
+
+    private void move(WorldMap worldMap, Location nextLocation, Location oldLocation, Predicate<Entity> isGoal) {
+        if (worldMap.isCellFree(nextLocation)) {
+            worldMap.removeEntity(oldLocation);
+            worldMap.tryAddEntity(nextLocation, this);
+        } else if (isEntityPresent(worldMap, nextLocation) && isGoal.test(getEntity(worldMap, nextLocation))) {
+            if (interactWithTarget(worldMap, nextLocation, getEntity(worldMap, nextLocation))) {
+                worldMap.removeEntity(oldLocation);
+                worldMap.tryAddEntity(nextLocation, this);
+            }
+        } else if (isEntityPresent(worldMap, nextLocation) && !isGoal.test(getEntity(worldMap, nextLocation))) {
+            return;
+        }
+    }
+
+    private boolean isEntityPresent(WorldMap worldMap, Location nextLocation) {
+        return worldMap.getEntity(nextLocation).isPresent();
+    }
+
+    private Entity getEntity(WorldMap worldMap, Location nextLocation) {
+        return worldMap.getEntity(nextLocation).get();
+    }
+
+    abstract boolean interactWithTarget(WorldMap worldMap, Location targetEntityLocation, Entity target);
+
+    private StepResult checkStepResult(WorldMap worldMap, Location nextLocation, Predicate<Entity> goal) {
+        Optional<Entity> nextEntity = worldMap.getEntity(nextLocation);
+        if (nextEntity.isPresent() && nextEntity.get().equals(this)) {
+            return StepResult.MOVED;
+        } else if (nextEntity.isPresent() && goal.test(nextEntity.get())) {
+            return StepResult.ATTACKED;
+        } else {
+            return StepResult.NO_ACTION;
+        }
+    }
+
+    private enum StepResult {
+        MOVED,
+        ATTACKED,
+        NO_ACTION
+
+    }
 
     public void heal(int healAmount) {
         hp += healAmount;

@@ -3,30 +3,30 @@ package v2.config;
 public enum StarterSimulationPreset {
     SMALL(
             WorldMapPreset.SMALL,
-            EntitiesPreset.SMALL,
+            EntitiesQuantityPreset.SMALL,
             EntityStatsPreset.SMALL,
             RepopulatePreset.SMALL
     ),
     MEDIUM(
             WorldMapPreset.MEDIUM,
-            EntitiesPreset.MEDIUM,
+            EntitiesQuantityPreset.MEDIUM,
             EntityStatsPreset.MEDIUM,
             RepopulatePreset.MEDIUM
     ),
     LARGE(
             WorldMapPreset.LARGE,
-            EntitiesPreset.LARGE,
+            EntitiesQuantityPreset.LARGE,
             EntityStatsPreset.LARGE,
             RepopulatePreset.LARGE
     );
 
     private final WorldMapPreset mapPreset;
-    private final EntitiesPreset entitiesPreset;
+    private final EntitiesQuantityPreset entitiesPreset;
     private final EntityStatsPreset entityStatsPreset;
     private final RepopulatePreset repopulatePreset;
 
     StarterSimulationPreset(WorldMapPreset mapPreset,
-                            EntitiesPreset entitiesPreset,
+                            EntitiesQuantityPreset entitiesPreset,
                             EntityStatsPreset entityStatsPreset,
                             RepopulatePreset repopulatePreset) {
         this.mapPreset = mapPreset;
@@ -39,7 +39,7 @@ public enum StarterSimulationPreset {
         return mapPreset;
     }
 
-    public EntitiesPreset getEntitiesPreset() {
+    public EntitiesQuantityPreset getEntitiesPreset() {
         return entitiesPreset;
     }
 

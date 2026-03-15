@@ -1,11 +1,9 @@
 package v2.map;
 
 import v2.entity.Entity;
-import v2.entity.EntityType;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 
 public class WorldMap {
@@ -43,8 +41,8 @@ public class WorldMap {
     }
 
     public boolean isInsideMap(Location location) {
-        return (location.x() >= 0 && location.x() < width) &&
-                (location.y() >= 0 && location.y() < height);
+        return (location.x() >= 0 && location.x() < width)
+                && (location.y() >= 0 && location.y() < height);
     }
 
     public boolean isCellFree(Location location) {

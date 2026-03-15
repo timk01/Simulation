@@ -5,8 +5,8 @@ public enum WorldMapPreset {
     MEDIUM(20, 20),
     LARGE(30, 30);
 
-    private int width;
-    private int height;
+    private final int width;
+    private final int height;
 
     WorldMapPreset(int width, int height) {
         this.width = width;

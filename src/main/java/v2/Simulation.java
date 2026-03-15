@@ -1,9 +1,6 @@
 package v2;
 
 import v2.actions.*;
-import v2.config.EntitiesPreset;
-import v2.config.EntityStatsPreset;
-import v2.config.RepopulatePreset;
 import v2.config.StarterSimulationPreset;
 import v2.controller.Controller;
 import v2.dialogue.PrintUtil;
@@ -12,50 +9,41 @@ import v2.map.WorldMap;
 import v2.path.PathFinder;
 import v2.renderer.Renderer;
 
-import java.util.ArrayList;
 import java.util.List;
 
-
 public class Simulation implements Runnable {
-    private final StarterSimulationPreset simulationPreset;
     private final WorldMap worldMap;
     private final Renderer consoleRenderer;
-    private List<Action> initActions = new ArrayList<>();
-    private List<Action> turnActions = new ArrayList<>();
-    private int turnCounter;
-
-    private ActionHelper actionHelper;
-    private EntityFactory entityFactory;
-
-    private final PathFinder pathFinder;
-
     private final Controller controller;
 
+    private final List<Action> initActions;
+    private final List<Action> turnActions;
+
+    private int turnCounter;
     private volatile boolean running = true;
 
     public Simulation(WorldMap map, Renderer renderer, Controller controller, StarterSimulationPreset simulationPreset) {
         this.worldMap = map;
         this.consoleRenderer = renderer;
         this.controller = controller;
-        this.simulationPreset = simulationPreset;
 
-        EntityStatsPreset entityStatsPreset = simulationPreset.getEntityStatsPreset();
-        this.entityFactory = new EntityFactory(entityStatsPreset);
-        this.actionHelper = new ActionHelper(entityFactory);
+        EntityFactory entityFactory = new EntityFactory(simulationPreset.getEntityStatsPreset());
+        ActionHelper actionHelper = new ActionHelper(entityFactory);
 
-        EntitiesPreset entitiesPreset = simulationPreset.getEntitiesPreset();
         this.initActions = List.of(
-                new PopulateMapAction(actionHelper, entitiesPreset));
+                new PopulateMapAction(actionHelper, simulationPreset.getEntitiesPreset()));
 
-        this.pathFinder = new PathFinder();
-        RepopulatePreset repopulatePreset = simulationPreset.getRepopulatePreset();
         this.turnActions = List.of(
-                new MoveCreaturesAction(pathFinder),
-                new KeepPopulationStableAction(actionHelper, repopulatePreset));
-
+                new MoveCreaturesAction(new PathFinder()),
+                new KeepPopulationStableAction(actionHelper, simulationPreset.getRepopulatePreset()));
     }
 
-    public void startSimulation() {
+    @Override
+    public void run() {
+        startSimulation();
+    }
+
+    private void startSimulation() {
         makeTurn(initActions);
         PrintUtil.printHelp();
 
@@ -82,15 +70,7 @@ public class Simulation implements Runnable {
         }
     }
 
-    public boolean isRunning() {
-        return running;
-    }
-
-    public void nextTurn() {
-        controller.oneMoreMove();
-    }
-
-    public void makeTurn(List<Action> actions) {
+    private void makeTurn(List<Action> actions) {
         for (Action action : actions) {
             action.execute(worldMap);
         }
@@ -101,22 +81,25 @@ public class Simulation implements Runnable {
         turnCounter++;
     }
 
-    public void stop() {
-        running = false;
-        controller.resume();
-    }
-
-    public void delay() {
+    private void delay() {
         try {
-            Thread.sleep(3000);
+            Thread.sleep(2000);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
     }
 
-    @Override
-    public void run() {
-        startSimulation();
+    public boolean isRunning() {
+        return running;
+    }
+
+    public void nextTurn() {
+        controller.oneMoreMove();
+    }
+
+    public void stop() {
+        running = false;
+        controller.resume();
     }
 
     public void resumeSimulation() {

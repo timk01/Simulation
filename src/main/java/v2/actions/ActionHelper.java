@@ -18,13 +18,13 @@ final public class ActionHelper {
         return entityFactory;
     }
 
-    List<Location> fillEmptyLocationsList(WorldMap map) {
+    List<Location> fillEmptyLocationsList(WorldMap worldMap) {
         List<Location> freeLocations = new ArrayList<>();
         Location location;
-        for (int y = 0; y < map.getHeight(); y++) {
-            for (int x = 0; x < map.getWidth(); x++) {
+        for (int y = 0; y < worldMap.getHeight(); y++) {
+            for (int x = 0; x < worldMap.getWidth(); x++) {
                 location = new Location(x, y);
-                if (map.getEntity(location).isEmpty()) {
+                if (worldMap.getEntity(location).isEmpty()) {
                     freeLocations.add(location);
                 }
             }

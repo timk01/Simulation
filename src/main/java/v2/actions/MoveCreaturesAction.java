@@ -1,20 +1,16 @@
 package v2.actions;
 
-import org.simulation.config.SimulationConfig;
 import v2.entity.Creature;
 import v2.entity.Entity;
-import v2.entity.EntityType;
 import v2.map.Location;
 import v2.map.WorldMap;
 import v2.path.PathFinder;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 public class MoveCreaturesAction implements Action {
-
     private final PathFinder pathFinder;
 
     public MoveCreaturesAction(PathFinder pathFinder) {
@@ -22,36 +18,35 @@ public class MoveCreaturesAction implements Action {
     }
 
     @Override
-    public void execute(WorldMap map) {
-        Map<Creature, Location> creatureLocationMap = fillCurrentMapSnapshot(map);
+    public void execute(WorldMap worldMap) {
+        Map<Creature, Location> creatureLocationMap = fillCurrentMapSnapshot(worldMap);
         for (Map.Entry<Creature, Location> creatureLocationEntry : creatureLocationMap.entrySet()) {
-            if (isLocationMissed(map, creatureLocationEntry)) {
+            if (isLocationMissed(worldMap, creatureLocationEntry)) {
                 continue;
             }
-            creatureLocationEntry.getKey().makeMove(map, creatureLocationEntry.getValue(), pathFinder);
+            creatureLocationEntry.getKey().makeMove(worldMap, creatureLocationEntry.getValue(), pathFinder);
         }
     }
 
-    private boolean isLocationMissed(WorldMap map, Map.Entry<Creature, Location> creatureLocationEntry) {
-        Creature currentCreature = creatureLocationEntry.getKey();
-        Location oldLocation = creatureLocationEntry.getValue();
-        Optional<Entity> entityBeforeMoving = map.getEntity(oldLocation);
-        return entityBeforeMoving.map(entity -> !entity.equals(currentCreature)).orElse(true);
-    }
-
-    private Map<Creature, Location> fillCurrentMapSnapshot(WorldMap map) {
+    private Map<Creature, Location> fillCurrentMapSnapshot(WorldMap worldMap) {
         Map<Creature, Location> creaturesLocation = new HashMap<>();
         Location location;
-        for (int y = 0; y < map.getHeight(); y++) {
-            for (int x = 0; x < map.getWidth(); x++) {
+        for (int y = 0; y < worldMap.getHeight(); y++) {
+            for (int x = 0; x < worldMap.getWidth(); x++) {
                 location = new Location(x, y);
-                Optional<Entity> nullableEntity = map.getEntity(location);
+                Optional<Entity> nullableEntity = worldMap.getEntity(location);
                 if (nullableEntity.isPresent() && nullableEntity.get() instanceof Creature) {
                     creaturesLocation.put((Creature) nullableEntity.get(), location);
-                    //toDo подумать, нужно ли различать конкретные типы существа ? (логика раазная или ?)
                 }
             }
         }
         return creaturesLocation;
+    }
+
+    private boolean isLocationMissed(WorldMap worldMap, Map.Entry<Creature, Location> creatureLocationEntry) {
+        Creature currentCreature = creatureLocationEntry.getKey();
+        Location oldLocation = creatureLocationEntry.getValue();
+        Optional<Entity> entityBeforeMoving = worldMap.getEntity(oldLocation);
+        return entityBeforeMoving.map(entity -> !entity.equals(currentCreature)).orElse(true);
     }
 }

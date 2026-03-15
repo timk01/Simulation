@@ -1,6 +1,6 @@
 package v2.config;
 
-public enum EntitiesPreset {
+public enum EntitiesQuantityPreset {
     SMALL(5, 5, 12, 10, 5),
     MEDIUM(15, 15, 40, 25, 15),
     LARGE(25, 25, 80, 40, 25);
@@ -11,11 +11,11 @@ public enum EntitiesPreset {
     private final int startHerbivoresQuantity;
     private final int startPredatorsQuantity;
 
-    EntitiesPreset(int startTreeQuantity,
-                   int startStonesQuantity,
-                   int startGrassQuantity,
-                   int startHerbivoresQuantity,
-                   int startPredatorsQuantity) {
+    EntitiesQuantityPreset(int startTreeQuantity,
+                           int startStonesQuantity,
+                           int startGrassQuantity,
+                           int startHerbivoresQuantity,
+                           int startPredatorsQuantity) {
         this.startTreeQuantity = startTreeQuantity;
         this.startStonesQuantity = startStonesQuantity;
         this.startGrassQuantity = startGrassQuantity;

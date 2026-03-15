@@ -37,7 +37,6 @@ public class KeepPopulationStableAction implements Action {
         if (needGrass + needHerbivores > emptyLocations.size()) {
             throw new IllegalArgumentException("need more fields than can populated!");
         }
-
         if (needGrass > 0) {
             populate(needGrass, map, actionHelper.getEntityFactory(), emptyLocations, EntityType.GRASS);
         }
@@ -46,23 +45,23 @@ public class KeepPopulationStableAction implements Action {
         }
     }
 
-    private void populate(int delta,
-                          WorldMap map,
-                          EntityFactory entityFactory,
-                          List<Location> emptyLocations,
-                          EntityType type) {
-        for (int i = 0; i < delta; i++) {
-            map.tryAddEntity(emptyLocations.get(i), entityFactory.createEntity(type));
-        }
-        if (delta > 0) {
-            emptyLocations.subList(0, delta).clear();
-        }
-    }
-
     private int countEntityPerType(Map<Location, Entity> snapshot, EntityType type) {
         return (int) snapshot.values().stream()
                 .filter(Objects::nonNull)
                 .filter((entity) -> type.matches(entity))
                 .count();
+    }
+
+    private void populate(int threshold,
+                          WorldMap worldMap,
+                          EntityFactory entityFactory,
+                          List<Location> emptyLocations,
+                          EntityType type) {
+        for (int i = 0; i < threshold; i++) {
+            worldMap.tryAddEntity(emptyLocations.get(i), entityFactory.createEntity(type));
+        }
+        if (threshold > 0) {
+            emptyLocations.subList(0, threshold).clear();
+        }
     }
 }

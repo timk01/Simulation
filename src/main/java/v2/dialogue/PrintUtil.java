@@ -50,7 +50,7 @@ final public class PrintUtil {
         );
     }
 
-    public static void printYesNoAtSimulStart() {
+    public static void printYesNoAtSimulationStart() {
         System.out.printf("Начать новую симуляцию? Введите '%c' для начала или '%c' для выхода.%n",
                 ConsoleConfig.YES_BUTTON,
                 ConsoleConfig.NO_BUTTON

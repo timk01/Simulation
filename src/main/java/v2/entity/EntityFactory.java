@@ -4,10 +4,10 @@ import v2.config.EntityStatsPreset;
 
 public class EntityFactory {
 
-    private EntityStatsPreset entityStatsPreset;
-    private EntityStatsPreset.GrassStats grassStats;
-    private EntityStatsPreset.HerbivoreStats herbivoreStats;
-    private EntityStatsPreset.PredatorStats predatorStats;
+    private final EntityStatsPreset entityStatsPreset;
+    private final EntityStatsPreset.GrassStats grassStats;
+    private final EntityStatsPreset.HerbivoreStats herbivoreStats;
+    private final EntityStatsPreset.PredatorStats predatorStats;
 
     public EntityFactory(EntityStatsPreset entityStatsPreset) {
         this.entityStatsPreset = entityStatsPreset;
@@ -20,7 +20,9 @@ public class EntityFactory {
         return switch (type) {
             case ROCK -> new Rock();
             case TREE -> new Tree();
-            case GRASS -> new Grass(grassStats.nutrition());
+            case GRASS -> new Grass(
+                    grassStats.nutrition()
+            );
             case HERBIVORE -> new Herbivore(
                     herbivoreStats.speed(),
                     herbivoreStats.hp(),

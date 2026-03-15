@@ -14,7 +14,7 @@ public enum EntityType {
             case TREE -> entity instanceof Tree;
             case HERBIVORE -> entity instanceof Herbivore;
             case PREDATOR -> entity instanceof Predator;
-            default -> throw new IllegalArgumentException("wrong type: " + this);
+            default -> throw new IllegalArgumentException("wrong type while matching entity: " + this);
         };
     }
 }

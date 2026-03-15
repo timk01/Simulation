@@ -10,10 +10,9 @@ import java.util.function.Predicate;
 import static java.util.Collections.emptyList;
 
 public class PathFinder {
-    public List<Location> findClosestPath(WorldMap map,
-                                          Location originalLocation,
-                                          Predicate<Entity> isGoal) {
-        Optional<Entity> entityAtTheLocation = map.getEntity(originalLocation);
+    public List<Location> findPath(WorldMap map,
+                                   Location originalLocation,
+                                   Predicate<Entity> isGoal) {
         Set<Location> visited = new HashSet<>();
         Queue<Location> queue = new ArrayDeque<>();
         Map<Location, Location> cameFrom = new HashMap<>();
@@ -54,6 +53,36 @@ public class PathFinder {
         return emptyList();
     }
 
+    private List<Location> reconstructPath(Map<Location, Location> cameFrom, Location initialLocation, Location goal) {
+        if (goal == null || !cameFrom.containsKey(goal)) {
+            return emptyList();
+        }
+
+        List<Location> currentPath = new ArrayList<>();
+
+        Location current = goal;
+
+        while (current != null) {
+            currentPath.add(current);
+            if (current.equals(initialLocation)) {
+                break;
+            } else {
+                current = cameFrom.get(current);
+            }
+        }
+
+        if (isPathInvalid(initialLocation, currentPath)) {
+            return emptyList();
+        }
+
+        Collections.reverse(currentPath);
+        return currentPath;
+    }
+
+    private boolean isPathInvalid(Location initialLocation, List<Location> currentPath) {
+        return !currentPath.get(currentPath.size() - 1).equals(initialLocation);
+    }
+
     private List<Location> generateNeighboursInsideMap(Location initialLocation, WorldMap map) {
         List<Location> insideMapLocations = new ArrayList<>();
         for (Location nearby : initialLocation.neighbourLocations()) {
@@ -62,36 +91,6 @@ public class PathFinder {
             }
         }
         return insideMapLocations;
-    }
-
-    private List<Location> reconstructPath(Map<Location, Location> cameFromCameToMap, Location initialLocation, Location goal) {
-        if (goal == null || !cameFromCameToMap.containsKey(goal)) {
-            return emptyList();
-        }
-
-        List<Location> theRealPath = new ArrayList<>();
-
-        Location current = goal;
-
-        while (current != null) {
-            theRealPath.add(current);
-            if (current.equals(initialLocation)) {
-                break;
-            } else {
-                current = cameFromCameToMap.get(current);
-            }
-        }
-
-        if (isAnEmptyList(initialLocation, theRealPath)) {
-            return emptyList();
-        }
-
-        Collections.reverse(theRealPath);
-        return theRealPath;
-    }
-
-    private boolean isAnEmptyList(Location initialLocation, List<Location> theRealPath) {
-        return !theRealPath.get(theRealPath.size() - 1).equals(initialLocation);
     }
 }
 
