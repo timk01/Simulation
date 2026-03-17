@@ -62,7 +62,7 @@ _О том как симуляцию запустить, как все это д
 0. Проект расположен https://github.com/timk01/Simulation
 1. Скачайте его тем или иным способом: как архив или - склонируйте (SSH/HTTPS)
 2. Откройте проект в IntelliJ IDEA / Eclipse / другой IDE
-3. Запустите класс **`v2.Starter`**
+3. Запустите класс **`simulation.Starter`** (src/main/java/simulation/Starter.java если из корня)
 4. В консоли следуйте подсказкам (см. ниже).
 
 ---
@@ -155,15 +155,15 @@ P - хищник, H - травоядное, G - трава, T - дерево, R 
 
 ### Начало игры
 
-![gamewelcome&start](docs/screenshots/gamewelcome&start.png)
+![gameWelcomePlusStart](docs/screenshots/gameWelcomePlusStart.png)
 
 ### Выбор и отображение начальных пресетов (1 - 2 - 3)
 
-![small](docs/screenshots/small_preset.png)
+![small](docs/screenshots/smallPreset.png)
 
-![middle](docs/screenshots/middle_preset.png)
+![middle](docs/screenshots/middlePreset.png)
 
-![large](docs/screenshots/large_preset.png)
+![large](docs/screenshots/largePreset.png)
 
 ### Контроль в одной симуляции с вводом команд (ф - ы - в - ц)
 
@@ -171,7 +171,7 @@ P - хищник, H - травоядное, G - трава, T - дерево, R 
 
 ### Заавершение игры и начало новой (д - н)
 
-![end&start.png](docs/screenshots/end&start.png)
+![endAndStart.png](docs/screenshots/endAndStart.png)
 
 </details>
 
