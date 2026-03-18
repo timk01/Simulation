@@ -1,9 +1,9 @@
 package simulation;
 
 import simulation.actions.*;
-import simulation.config.StarterSimulationPreset;
+import simulation.presets.StarterSimulationPreset;
 import simulation.controller.Controller;
-import simulation.dialogue.PrintUtil;
+import simulation.console.PrintUtil;
 import simulation.entity.EntityFactory;
 import simulation.map.WorldMap;
 import simulation.path.PathFinder;

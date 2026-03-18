@@ -1,9 +1,9 @@
-package simulation.dialogue;
+package simulation.console;
 
 import java.util.Locale;
 import java.util.Map;
 
-public final class ConsoleConfig {
+public final class ConsoleControls {
     public static final int SMALL_PRESET_KEY = 1;
     public static final int MEDIUM_PRESET_KEY = 2;
     public static final int LARGE_PRESET_KEY = 3;
@@ -18,13 +18,13 @@ public final class ConsoleConfig {
 
     public static final Locale RU = Locale.forLanguageTag("ru");
 
-    private ConsoleConfig() {
+    private ConsoleControls() {
     }
 
-    public static final Map<Character, ChosenCommand> COMMANDS = Map.of(
-            PAUSE_BUTTON, ChosenCommand.PAUSE,
-            RESUME_BUTTON, ChosenCommand.RESUME,
-            STEP_BUTTON, ChosenCommand.STEP,
-            STOP_BUTTON, ChosenCommand.STOP
+    public static final Map<Character, SimulationCommand> COMMANDS = Map.of(
+            PAUSE_BUTTON, SimulationCommand.PAUSE,
+            RESUME_BUTTON, SimulationCommand.RESUME,
+            STEP_BUTTON, SimulationCommand.STEP,
+            STOP_BUTTON, SimulationCommand.STOP
     );
 }

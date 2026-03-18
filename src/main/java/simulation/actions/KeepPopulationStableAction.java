@@ -1,6 +1,6 @@
 package simulation.actions;
 
-import simulation.config.RepopulatePreset;
+import simulation.presets.RepopulatePreset;
 import simulation.entity.Entity;
 import simulation.entity.EntityFactory;
 import simulation.entity.EntityType;

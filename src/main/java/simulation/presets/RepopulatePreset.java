@@ -1,4 +1,4 @@
-package simulation.config;
+package simulation.presets;
 
 public enum RepopulatePreset {
     SMALL(8, 4),

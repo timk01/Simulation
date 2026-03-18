@@ -2,9 +2,6 @@ package simulation.console;
 
 import simulation.Simulation;
 import simulation.controller.Controller;
-import simulation.dialogue.ChosenCommand;
-import simulation.dialogue.ConsoleConfig;
-import simulation.dialogue.PrintUtil;
 
 import java.util.Map;
 import java.util.Optional;
@@ -47,9 +44,9 @@ public class ConsoleCommandSource implements CommandSource {
                 return;
             }
 
-            ChosenCommand chosenCommand = ConsoleConfig.COMMANDS.get(key);
-            PrintUtil.printSpecificCommand(chosenCommand);
-            switch (chosenCommand) {
+            SimulationCommand simulationCommand = ConsoleControls.COMMANDS.get(key);
+            PrintUtil.printSpecificCommand(simulationCommand);
+            switch (simulationCommand) {
                 case STOP -> {
                     simulation.stop();
                     return;
@@ -75,8 +72,8 @@ public class ConsoleCommandSource implements CommandSource {
                 return null;
             }
 
-            String properInput = word.trim().toLowerCase(ConsoleConfig.RU);
-            if (properInput.length() == 1 && isKeyAllowed(properInput.charAt(0), ConsoleConfig.COMMANDS)) {
+            String properInput = word.trim().toLowerCase(ConsoleControls.RU);
+            if (properInput.length() == 1 && isKeyAllowed(properInput.charAt(0), ConsoleControls.COMMANDS)) {
                 return properInput.charAt(0);
             }
             PrintUtil.printInvalidInput();
@@ -113,10 +110,10 @@ public class ConsoleCommandSource implements CommandSource {
             return null;
         }
         char charAt = loweredString.charAt(0);
-        if (charAt == ConsoleConfig.YES_BUTTON) {
+        if (charAt == ConsoleControls.YES_BUTTON) {
             return true;
         }
-        if (charAt == ConsoleConfig.NO_BUTTON) {
+        if (charAt == ConsoleControls.NO_BUTTON) {
             return false;
         }
         return null;
@@ -126,7 +123,7 @@ public class ConsoleCommandSource implements CommandSource {
         if (string == null) {
             return null;
         }
-        return string.trim().toLowerCase(ConsoleConfig.RU);
+        return string.trim().toLowerCase(ConsoleControls.RU);
     }
 
     private String readTrimmedOrNull() {

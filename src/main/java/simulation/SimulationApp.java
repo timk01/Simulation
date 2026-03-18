@@ -1,10 +1,10 @@
 package simulation;
 
-import simulation.config.StarterSimulationPreset;
+import simulation.presets.StarterSimulationPreset;
 import simulation.console.ConsoleCommandSource;
 import simulation.controller.Controller;
-import simulation.dialogue.ConsoleConfig;
-import simulation.dialogue.PrintUtil;
+import simulation.console.ConsoleControls;
+import simulation.console.PrintUtil;
 import simulation.map.WorldMap;
 import simulation.renderer.Renderer;
 
@@ -16,12 +16,13 @@ public class SimulationApp {
         boolean continueSimulation = true;
         Scanner scanner = new Scanner(System.in);
         ConsoleCommandSource commandSource = new ConsoleCommandSource(scanner);
-        PrintUtil.greetings();
+        PrintUtil.printGreetings();
 
         while (continueSimulation) {
             PrintUtil.printYesNoAtSimulationStart();
             if (!commandSource.askToStart()) {
                 continueSimulation = false;
+                PrintUtil.printBye();
                 continue;
             }
 
@@ -42,8 +43,8 @@ public class SimulationApp {
 
     private StarterSimulationPreset getSimulationPreset(ConsoleCommandSource commandSource) {
         Optional<Integer> chosenWorld = commandSource.askIntOrEnter(
-                ConsoleConfig.SMALL_PRESET_KEY,
-                ConsoleConfig.LARGE_PRESET_KEY
+                ConsoleControls.SMALL_PRESET_KEY,
+                ConsoleControls.LARGE_PRESET_KEY
         );
         return chosenWorld
                 .map(StarterSimulationPreset::presetFromKey)

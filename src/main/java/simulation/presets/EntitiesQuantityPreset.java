@@ -1,4 +1,4 @@
-package simulation.config;
+package simulation.presets;
 
 public enum EntitiesQuantityPreset {
     SMALL(5, 5, 12, 10, 5),

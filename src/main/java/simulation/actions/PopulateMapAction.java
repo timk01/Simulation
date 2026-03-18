@@ -1,6 +1,6 @@
 package simulation.actions;
 
-import simulation.config.EntitiesQuantityPreset;
+import simulation.presets.EntitiesQuantityPreset;
 import simulation.entity.EntityType;
 import simulation.map.Location;
 import simulation.map.WorldMap;

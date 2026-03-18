@@ -173,6 +173,10 @@ P - хищник, H - травоядное, G - трава, T - дерево, R 
 
 ![endAndStart.png](docs/screenshots/endAndStart.png)
 
+### Прощание
+
+![bye](docs/screenshots/bye.png)
+
 </details>
 
 <details>

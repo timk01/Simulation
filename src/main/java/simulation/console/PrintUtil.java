@@ -1,4 +1,4 @@
-package simulation.dialogue;
+package simulation.console;
 
 final public class PrintUtil {
 
@@ -17,18 +17,18 @@ final public class PrintUtil {
                   %s = сделать ровно один ход и ожидать команды (игнорирует бесконтрольный беспаузный режим) 
                   %s = выход
                 """,
-                ConsoleConfig.PAUSE_BUTTON,
-                ConsoleConfig.RESUME_BUTTON,
-                ConsoleConfig.STEP_BUTTON,
-                ConsoleConfig.STOP_BUTTON);
+                ConsoleControls.PAUSE_BUTTON,
+                ConsoleControls.RESUME_BUTTON,
+                ConsoleControls.STEP_BUTTON,
+                ConsoleControls.STOP_BUTTON);
     }
 
     public static void printCommandPrompt() {
         System.out.printf("Команда (%c=пауза, %c=продолжить, %c=ход, %c=выход)%n",
-                ConsoleConfig.PAUSE_BUTTON,
-                ConsoleConfig.RESUME_BUTTON,
-                ConsoleConfig.STEP_BUTTON,
-                ConsoleConfig.STOP_BUTTON
+                ConsoleControls.PAUSE_BUTTON,
+                ConsoleControls.RESUME_BUTTON,
+                ConsoleControls.STEP_BUTTON,
+                ConsoleControls.STOP_BUTTON
         );
     }
 
@@ -45,15 +45,15 @@ final public class PrintUtil {
 
     public static void printInvalidYesNoInput() {
         System.out.printf("Некорректный ввод. Пожалуйста, введите '%c' или '%c'.%n",
-                ConsoleConfig.YES_BUTTON,
-                ConsoleConfig.NO_BUTTON
+                ConsoleControls.YES_BUTTON,
+                ConsoleControls.NO_BUTTON
         );
     }
 
     public static void printYesNoAtSimulationStart() {
         System.out.printf("Начать новую симуляцию? Введите '%c' для начала или '%c' для выхода.%n",
-                ConsoleConfig.YES_BUTTON,
-                ConsoleConfig.NO_BUTTON
+                ConsoleControls.YES_BUTTON,
+                ConsoleControls.NO_BUTTON
         );
     }
 
@@ -65,7 +65,7 @@ final public class PrintUtil {
         System.out.printf("Число вне диапазона (%d..%d). Повторите ввод.%n", min, max);
     }
 
-    public static void printSpecificCommand(ChosenCommand cmd) {
+    public static void printSpecificCommand(SimulationCommand cmd) {
         String separator = System.lineSeparator();
         switch (cmd) {
             case STOP -> System.out.println("⏹ stop" + separator);
@@ -85,12 +85,12 @@ final public class PrintUtil {
               Enter/пробел = средняя по умолчанию
               
             """,
-                ConsoleConfig.SMALL_PRESET_KEY,
-                ConsoleConfig.MEDIUM_PRESET_KEY,
-                ConsoleConfig.LARGE_PRESET_KEY);
+                ConsoleControls.SMALL_PRESET_KEY,
+                ConsoleControls.MEDIUM_PRESET_KEY,
+                ConsoleControls.LARGE_PRESET_KEY);
     }
 
-    public static void greetings() {
+    public static void printGreetings() {
         System.out.println("""
                 
                 Добро пожаловать в программу симуляция!
@@ -116,6 +116,14 @@ final public class PrintUtil {
                 Желаю нескучно провести время!
                                 
                 ****************************************************
+                
+                """);
+    }
+
+    public static void printBye() {
+        System.out.println("""
+               
+                До свидания!
                 
                 """);
     }

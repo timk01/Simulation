@@ -1,6 +1,6 @@
 package simulation.entity;
 
-import simulation.config.EntityStatsPreset;
+import simulation.presets.EntityStatsPreset;
 
 public class EntityFactory {
 
