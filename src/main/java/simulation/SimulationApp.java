@@ -3,7 +3,10 @@ package simulation;
 import simulation.console.*;
 import simulation.controller.Controller;
 import simulation.map.WorldMap;
+import simulation.path.BFSPathFinder;
+import simulation.path.PathFinder;
 import simulation.presets.StarterSimulationPreset;
+import simulation.renderer.ConsoleRenderer;
 import simulation.renderer.Renderer;
 
 import java.util.Optional;
@@ -29,9 +32,10 @@ public class SimulationApp {
             StarterSimulationPreset preset = getSimulationPreset(consoleStartupInputSource);
 
             WorldMap worldMap = new WorldMap(preset.getMapPreset().getWidth(), preset.getMapPreset().getHeight());
-            Renderer renderer = new Renderer(worldMap);
+            Renderer renderer = new ConsoleRenderer(worldMap);
             Controller controller = new Controller();
-            Simulation simulation = new Simulation(worldMap, renderer, controller, preset);
+            PathFinder pathFinder = new BFSPathFinder();
+            Simulation simulation = new Simulation(worldMap, renderer, controller, preset, pathFinder);
             Thread simThread = new Thread(simulation, "epicSimulation");
             commandSource = new ConsoleSimulationCommandSource(simulation, simThread, scanner);
 

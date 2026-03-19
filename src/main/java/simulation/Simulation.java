@@ -1,19 +1,19 @@
 package simulation;
 
 import simulation.actions.*;
-import simulation.presets.StarterSimulationPreset;
-import simulation.controller.Controller;
 import simulation.console.PrintUtil;
+import simulation.controller.Controller;
 import simulation.entity.EntityFactory;
 import simulation.map.WorldMap;
 import simulation.path.PathFinder;
+import simulation.presets.StarterSimulationPreset;
 import simulation.renderer.Renderer;
 
 import java.util.List;
 
 public class Simulation implements Runnable {
     private final WorldMap worldMap;
-    private final Renderer consoleRenderer;
+    private final Renderer renderer;
     private final Controller controller;
 
     private final List<Action> initActions;
@@ -22,9 +22,13 @@ public class Simulation implements Runnable {
     private int turnCounter;
     private volatile boolean running = true;
 
-    public Simulation(WorldMap map, Renderer renderer, Controller controller, StarterSimulationPreset simulationPreset) {
+    public Simulation(WorldMap map,
+                      Renderer renderer,
+                      Controller controller,
+                      StarterSimulationPreset simulationPreset,
+                      PathFinder pathFinder) {
         this.worldMap = map;
-        this.consoleRenderer = renderer;
+        this.renderer = renderer;
         this.controller = controller;
 
         EntityFactory entityFactory = new EntityFactory(simulationPreset.getEntityStatsPreset());
@@ -34,7 +38,7 @@ public class Simulation implements Runnable {
                 new PopulateMapAction(actionHelper, simulationPreset.getEntitiesQuantityPreset()));
 
         this.turnActions = List.of(
-                new MoveCreaturesAction(new PathFinder()),
+                new MoveCreaturesAction(pathFinder),
                 new KeepPopulationStableAction(actionHelper, simulationPreset.getRepopulatePreset()));
     }
 
@@ -74,7 +78,7 @@ public class Simulation implements Runnable {
         for (Action action : actions) {
             action.execute(worldMap);
         }
-        consoleRenderer.draw();
+        renderer.draw();
     }
 
     private void incrementCounter() {
