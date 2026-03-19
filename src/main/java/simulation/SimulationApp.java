@@ -1,11 +1,9 @@
 package simulation;
 
-import simulation.presets.StarterSimulationPreset;
-import simulation.console.ConsoleCommandSource;
+import simulation.console.*;
 import simulation.controller.Controller;
-import simulation.console.ConsoleControls;
-import simulation.console.PrintUtil;
 import simulation.map.WorldMap;
+import simulation.presets.StarterSimulationPreset;
 import simulation.renderer.Renderer;
 
 import java.util.Optional;
@@ -15,34 +13,35 @@ public class SimulationApp {
     public void runSimulation() throws InterruptedException {
         boolean continueSimulation = true;
         Scanner scanner = new Scanner(System.in);
-        ConsoleCommandSource commandSource = new ConsoleCommandSource(scanner);
+        StartupInputSource consoleStartupInputSource = new ConsoleStartupInputSource(scanner);
         PrintUtil.printGreetings();
+        SimulationCommandSource commandSource;
 
         while (continueSimulation) {
             PrintUtil.printYesNoAtSimulationStart();
-            if (!commandSource.askToStart()) {
+            if (!consoleStartupInputSource.askToStart()) {
                 continueSimulation = false;
                 PrintUtil.printBye();
                 continue;
             }
 
             PrintUtil.printMapInfo();
-            StarterSimulationPreset preset = getSimulationPreset(commandSource);
+            StarterSimulationPreset preset = getSimulationPreset(consoleStartupInputSource);
 
             WorldMap worldMap = new WorldMap(preset.getMapPreset().getWidth(), preset.getMapPreset().getHeight());
             Renderer renderer = new Renderer(worldMap);
             Controller controller = new Controller();
             Simulation simulation = new Simulation(worldMap, renderer, controller, preset);
             Thread simThread = new Thread(simulation, "epicSimulation");
-            commandSource = new ConsoleCommandSource(controller, simulation, simThread, scanner);
+            commandSource = new ConsoleSimulationCommandSource(simulation, simThread, scanner);
 
             simulate(simulation, simThread, commandSource, controller);
         }
-        commandSource.close();
+        scanner.close();
     }
 
-    private StarterSimulationPreset getSimulationPreset(ConsoleCommandSource commandSource) {
-        Optional<Integer> chosenWorld = commandSource.askIntOrEnter(
+    private StarterSimulationPreset getSimulationPreset(StartupInputSource inputSource) {
+        Optional<Integer> chosenWorld = inputSource.askIntOrEnter(
                 ConsoleControls.SMALL_PRESET_KEY,
                 ConsoleControls.LARGE_PRESET_KEY
         );
@@ -53,7 +52,7 @@ public class SimulationApp {
 
     private void simulate(Simulation simulation,
                           Thread simThread,
-                          ConsoleCommandSource commandSource,
+                          SimulationCommandSource commandSource,
                           Controller controller) throws InterruptedException {
         simulation.pauseSimulation();
         simThread.start();
