@@ -27,7 +27,7 @@ public class SimulationApp {
         simulation.pauseSimulation();
         simThread.start();
         try {
-            runProgram(simulation, simThread, commandSource);
+            runProgram(simulation, commandSource);
         } finally {
             simulation.stop();
             simThread.interrupt();
@@ -36,7 +36,6 @@ public class SimulationApp {
     }
 
     private void runProgram(Simulation simulation,
-                            Thread simThread,
                             ConsoleCommands commandSource) {
         PrintUtil.mapPreviewMsg();
 

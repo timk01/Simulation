@@ -8,9 +8,9 @@ import java.util.Optional;
 
 public class ConsoleRenderer implements Renderer {
     private static final String EMPTY_CELL = " . ";
-    private static final String ROCK_CELL = " R ";
-    private static final String TREE_CELL = " T ";
-    private static final String GRASS_CELL = " G ";
+    private static final String ROCK_CELL = " r ";
+    private static final String TREE_CELL = " t ";
+    private static final String GRASS_CELL = " g ";
     private static final String HERBIVORE_CELL = " H ";
     private static final String PREDATOR_CELL = " P ";
 
