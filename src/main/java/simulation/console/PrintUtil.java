@@ -17,18 +17,18 @@ final public class PrintUtil {
                   %s = сделать ровно один ход и ожидать команды (игнорирует бесконтрольный беспаузный режим) 
                   %s = выход
                 """,
-                ConsoleControls.PAUSE_BUTTON,
-                ConsoleControls.RESUME_BUTTON,
-                ConsoleControls.STEP_BUTTON,
-                ConsoleControls.STOP_BUTTON);
+                ConsoleSymbols.PAUSE_BUTTON,
+                ConsoleSymbols.RESUME_BUTTON,
+                ConsoleSymbols.STEP_BUTTON,
+                ConsoleSymbols.STOP_BUTTON);
     }
 
     public static void printCommandPrompt() {
         System.out.printf("Команда (%c=пауза, %c=продолжить, %c=ход, %c=выход)%n",
-                ConsoleControls.PAUSE_BUTTON,
-                ConsoleControls.RESUME_BUTTON,
-                ConsoleControls.STEP_BUTTON,
-                ConsoleControls.STOP_BUTTON
+                ConsoleSymbols.PAUSE_BUTTON,
+                ConsoleSymbols.RESUME_BUTTON,
+                ConsoleSymbols.STEP_BUTTON,
+                ConsoleSymbols.STOP_BUTTON
         );
     }
 
@@ -45,15 +45,15 @@ final public class PrintUtil {
 
     public static void printInvalidYesNoInput() {
         System.out.printf("Некорректный ввод. Пожалуйста, введите '%c' или '%c'.%n",
-                ConsoleControls.YES_BUTTON,
-                ConsoleControls.NO_BUTTON
+                ConsoleSymbols.YES_BUTTON,
+                ConsoleSymbols.NO_BUTTON
         );
     }
 
     public static void printYesNoAtSimulationStart() {
         System.out.printf("Начать новую симуляцию? Введите '%c' для начала или '%c' для выхода.%n",
-                ConsoleControls.YES_BUTTON,
-                ConsoleControls.NO_BUTTON
+                ConsoleSymbols.YES_BUTTON,
+                ConsoleSymbols.NO_BUTTON
         );
     }
 
@@ -85,9 +85,9 @@ final public class PrintUtil {
               Enter/пробел = средняя по умолчанию
               
             """,
-                ConsoleControls.SMALL_PRESET_KEY,
-                ConsoleControls.MEDIUM_PRESET_KEY,
-                ConsoleControls.LARGE_PRESET_KEY);
+                ConsoleSymbols.SMALL_PRESET_KEY,
+                ConsoleSymbols.MEDIUM_PRESET_KEY,
+                ConsoleSymbols.LARGE_PRESET_KEY);
     }
 
     public static void printGreetings() {

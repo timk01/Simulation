@@ -30,7 +30,7 @@ public class ConsoleRenderer implements Renderer {
                 if (entity.isEmpty()) {
                     System.out.print(EMPTY_CELL);
                 } else {
-                    System.out.print(drawEntity(entity.get()));
+                    System.out.print(toSprite(entity.get()));
                 }
             }
             System.out.println();
@@ -38,20 +38,23 @@ public class ConsoleRenderer implements Renderer {
         System.out.println();
     }
 
-    private String drawEntity(Entity entity) {
-        String drawing = "";
+    private String toSprite(Entity entity) {
         if (entity instanceof Rock) {
-            drawing = ROCK_CELL;
-        } else if (entity instanceof Tree) {
-            drawing = TREE_CELL;
-        } else if (entity instanceof Grass) {
-            drawing = GRASS_CELL;
-        } else if (entity instanceof Herbivore) {
-            drawing = HERBIVORE_CELL;
-        } else if (entity instanceof Predator) {
-            drawing = PREDATOR_CELL;
+            return ROCK_CELL;
         }
-        return drawing;
+        if (entity instanceof Tree) {
+            return TREE_CELL;
+        }
+        if (entity instanceof Grass) {
+            return GRASS_CELL;
+        }
+        if (entity instanceof Herbivore) {
+            return HERBIVORE_CELL;
+        }
+        if (entity instanceof Predator) {
+            return PREDATOR_CELL;
+        }
+        throw new IllegalStateException("illegal sprite is found while getting it");
     }
 }
 

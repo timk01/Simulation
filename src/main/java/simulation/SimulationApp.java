@@ -1,7 +1,9 @@
 package simulation;
 
-import simulation.console.*;
-import simulation.controller.Controller;
+import simulation.console.ConsoleSymbols;
+import simulation.console.ConsoleCommands;
+import simulation.console.PrintUtil;
+import simulation.console.SimulationCommand;
 
 import java.util.Scanner;
 
@@ -16,21 +18,57 @@ public class SimulationApp {
 
     public void runSimulation() throws InterruptedException {
         Thread simThread = new Thread(simulation, "epicSimulation");
-        ConsoleSimulationCommandSource commandSource = new ConsoleSimulationCommandSource(simulation, simThread, scanner);
-        simulate(simulation, simThread, commandSource);
+        simulate(simulation, simThread, new ConsoleCommands(scanner));
     }
 
     private void simulate(Simulation simulation,
                           Thread simThread,
-                          SimulationCommandSource commandSource) throws InterruptedException {
+                          ConsoleCommands commandSource) throws InterruptedException {
         simulation.pauseSimulation();
         simThread.start();
         try {
-            commandSource.runProgram();
+            runProgram(simulation, simThread, commandSource);
         } finally {
             simulation.stop();
             simThread.interrupt();
             simThread.join();
+        }
+    }
+
+    private void runProgram(Simulation simulation,
+                            Thread simThread,
+                            ConsoleCommands commandSource) {
+        PrintUtil.mapPreviewMsg();
+
+        while (true) {
+            if (!simulation.isRunning()) {
+                simulation.stop();
+                return;
+            }
+
+            Character key = commandSource.readValidCommandCharOrNull();
+            if (key == null) {
+                simulation.stop();
+                return;
+            }
+
+            SimulationCommand simulationCommand = ConsoleSymbols.COMMANDS.get(key);
+            PrintUtil.printSpecificCommand(simulationCommand);
+            switch (simulationCommand) {
+                case STOP -> {
+                    simulation.stop();
+                    return;
+                }
+                case STEP -> {
+                    simulation.nextTurn();
+                }
+                case PAUSE -> {
+                    simulation.pauseSimulation();
+                }
+                case RESUME -> {
+                    simulation.resumeSimulation();
+                }
+            }
         }
     }
 }

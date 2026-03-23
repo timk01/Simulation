@@ -3,7 +3,7 @@ package simulation.console;
 import java.util.Locale;
 import java.util.Map;
 
-public final class ConsoleControls {
+public final class ConsoleSymbols {
     public static final int SMALL_PRESET_KEY = 1;
     public static final int MEDIUM_PRESET_KEY = 2;
     public static final int LARGE_PRESET_KEY = 3;
@@ -18,7 +18,7 @@ public final class ConsoleControls {
 
     public static final Locale RU = Locale.forLanguageTag("ru");
 
-    private ConsoleControls() {
+    private ConsoleSymbols() {
     }
 
     public static final Map<Character, SimulationCommand> COMMANDS = Map.of(

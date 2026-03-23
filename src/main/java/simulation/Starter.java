@@ -1,9 +1,6 @@
 package simulation;
 
-import simulation.console.ConsoleControls;
-import simulation.console.ConsoleStartupInputSource;
-import simulation.console.PrintUtil;
-import simulation.console.StartupInputSource;
+import simulation.console.*;
 import simulation.controller.Controller;
 import simulation.map.WorldMap;
 import simulation.path.BFSPathFinder;
@@ -22,12 +19,12 @@ public class Starter {
     public static void main(String[] args) throws InterruptedException {
         boolean continueSimulation = true;
         Scanner scanner = new Scanner(System.in);
-        StartupInputSource consoleStartupInputSource = new ConsoleStartupInputSource(scanner);
+        ConsoleCommands consoleCommands = new ConsoleCommands(scanner);
         PrintUtil.printGreetings();
 
         while (continueSimulation) {
             PrintUtil.printYesNoAtSimulationStart();
-            if (!consoleStartupInputSource.askToStart()) {
+            if (!consoleCommands.askToStart()) {
                 continueSimulation = false;
                 PrintUtil.printBye();
                 continue;
@@ -35,10 +32,10 @@ public class Starter {
 
             PrintUtil.printMapInfo();
 
-            Integer userChoose = consoleStartupInputSource.askIntOrEnter(
-                    ConsoleControls.SMALL_PRESET_KEY,
-                    ConsoleControls.LARGE_PRESET_KEY
-            ).orElse(ConsoleControls.MEDIUM_PRESET_KEY);
+            Integer userChoose = consoleCommands.askIntOrEnter(
+                    ConsoleSymbols.SMALL_PRESET_KEY,
+                    ConsoleSymbols.LARGE_PRESET_KEY
+            ).orElse(ConsoleSymbols.MEDIUM_PRESET_KEY);
 
             Simulation simulation = getSimulation(userChoose);
 

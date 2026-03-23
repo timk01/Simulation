@@ -1,16 +1,37 @@
 package simulation.console;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.Scanner;
 
-public class ConsoleStartupInputSource implements StartupInputSource {
+public class ConsoleCommands {
     private final Scanner scanner;
 
-    public ConsoleStartupInputSource(Scanner scanner) {
+    public ConsoleCommands(Scanner scanner) {
         this.scanner = scanner;
     }
 
-    @Override
+    public Character readValidCommandCharOrNull() {
+        String word;
+        do {
+            word = readTrimmedOrNull();
+            if (word == null) {
+                return null;
+            }
+
+            String properInput = word.trim().toLowerCase(ConsoleSymbols.RU);
+            if (properInput.length() == 1 && isKeyAllowed(properInput.charAt(0), ConsoleSymbols.COMMANDS)) {
+                return properInput.charAt(0);
+            }
+            PrintUtil.printInvalidInput();
+        } while (true);
+    }
+
+    private <E extends Enum<E>> boolean isKeyAllowed(char c, Map<Character, E> table) {
+        return table.containsKey(c);
+    }
+
+
     public boolean askToStart() {
         String symbol;
 
@@ -37,10 +58,10 @@ public class ConsoleStartupInputSource implements StartupInputSource {
             return null;
         }
         char charAt = loweredString.charAt(0);
-        if (charAt == ConsoleControls.YES_BUTTON) {
+        if (charAt == ConsoleSymbols.YES_BUTTON) {
             return true;
         }
-        if (charAt == ConsoleControls.NO_BUTTON) {
+        if (charAt == ConsoleSymbols.NO_BUTTON) {
             return false;
         }
         return null;
@@ -50,10 +71,9 @@ public class ConsoleStartupInputSource implements StartupInputSource {
         if (string == null) {
             return null;
         }
-        return string.trim().toLowerCase(ConsoleControls.RU);
+        return string.trim().toLowerCase(ConsoleSymbols.RU);
     }
 
-    @Override
     public Optional<Integer> askIntOrEnter(int min, int max) {
         while (true) {
             PrintUtil.printAskNumberOrEnter();
