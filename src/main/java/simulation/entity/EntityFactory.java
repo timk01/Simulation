@@ -1,19 +1,19 @@
 package simulation.entity;
 
-import simulation.presets.EntityStatsPreset;
+import simulation.config.EntityCharacteristics;
 
 public class EntityFactory {
 
-    private final EntityStatsPreset entityStatsPreset;
-    private final EntityStatsPreset.GrassStats grassStats;
-    private final EntityStatsPreset.HerbivoreStats herbivoreStats;
-    private final EntityStatsPreset.PredatorStats predatorStats;
+    private final EntityCharacteristics entityCharacteristics;
+    private final EntityCharacteristics.GrassStats grassStats;
+    private final EntityCharacteristics.HerbivoreStats herbivoreStats;
+    private final EntityCharacteristics.PredatorStats predatorStats;
 
-    public EntityFactory(EntityStatsPreset entityStatsPreset) {
-        this.entityStatsPreset = entityStatsPreset;
-        this.grassStats = entityStatsPreset.getGrass();
-        this.herbivoreStats = entityStatsPreset.getHerbivore();
-        this.predatorStats = entityStatsPreset.getPredator();
+    public EntityFactory(EntityCharacteristics entityCharacteristics) {
+        this.entityCharacteristics = entityCharacteristics;
+        this.grassStats = entityCharacteristics.getGrass();
+        this.herbivoreStats = entityCharacteristics.getHerbivore();
+        this.predatorStats = entityCharacteristics.getPredator();
     }
 
     public Entity createEntity(EntityType type) {

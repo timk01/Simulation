@@ -6,7 +6,7 @@ import simulation.controller.Controller;
 import simulation.entity.EntityFactory;
 import simulation.map.WorldMap;
 import simulation.path.PathFinder;
-import simulation.presets.StarterSimulationPreset;
+import simulation.config.SimulationConfig;
 import simulation.renderer.Renderer;
 
 import java.util.List;
@@ -25,21 +25,21 @@ public class Simulation implements Runnable {
     public Simulation(WorldMap map,
                       Renderer renderer,
                       Controller controller,
-                      StarterSimulationPreset simulationPreset,
+                      SimulationConfig simulationConfig,
                       PathFinder pathFinder) {
         this.worldMap = map;
         this.renderer = renderer;
         this.controller = controller;
 
-        EntityFactory entityFactory = new EntityFactory(simulationPreset.getEntityStatsPreset());
+        EntityFactory entityFactory = new EntityFactory(simulationConfig.entityCharacteristics());
         ActionHelper actionHelper = new ActionHelper(entityFactory);
 
         this.initActions = List.of(
-                new PopulateMapAction(actionHelper, simulationPreset.getEntitiesQuantityPreset()));
+                new PopulateMapAction(actionHelper, simulationConfig.entityStartValues()));
 
         this.turnActions = List.of(
                 new MoveCreaturesAction(pathFinder),
-                new KeepPopulationStableAction(actionHelper, simulationPreset.getRepopulatePreset()));
+                new KeepPopulationStableAction(actionHelper, simulationConfig.repopulateValues()));
     }
 
     @Override

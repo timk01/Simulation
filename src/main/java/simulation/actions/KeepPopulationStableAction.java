@@ -1,11 +1,11 @@
 package simulation.actions;
 
-import simulation.presets.RepopulatePreset;
 import simulation.entity.Entity;
 import simulation.entity.EntityFactory;
 import simulation.entity.EntityType;
 import simulation.map.Location;
 import simulation.map.WorldMap;
+import simulation.config.RepopulateValues;
 
 import java.util.Collections;
 import java.util.List;
@@ -14,11 +14,11 @@ import java.util.Objects;
 
 public class KeepPopulationStableAction implements Action {
     private final ActionHelper actionHelper;
-    private final RepopulatePreset repopulatePreset;
+    private final RepopulateValues repopulateValues;
 
-    public KeepPopulationStableAction(ActionHelper actionHelper, RepopulatePreset repopulatePreset) {
+    public KeepPopulationStableAction(ActionHelper actionHelper, RepopulateValues repopulateValues) {
         this.actionHelper = actionHelper;
-        this.repopulatePreset = repopulatePreset;
+        this.repopulateValues = repopulateValues;
     }
 
     @Override
@@ -26,8 +26,8 @@ public class KeepPopulationStableAction implements Action {
         List<Location> emptyLocations = actionHelper.fillEmptyLocationsList(map);
         Collections.shuffle(emptyLocations);
 
-        int grassThreshold = repopulatePreset.getGrassMin();
-        int herbivoreThreshold = repopulatePreset.getHerbivoreMin();
+        int grassThreshold = repopulateValues.getGrassMin();
+        int herbivoreThreshold = repopulateValues.getHerbivoreMin();
         Map<Location, Entity> mapSnapshot = map.getMapSnapshot();
         int currentGrass = countEntityPerType(mapSnapshot, EntityType.GRASS);
         int currentHerbivores = countEntityPerType(mapSnapshot, EntityType.HERBIVORE);

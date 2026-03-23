@@ -1,9 +1,9 @@
 package simulation.actions;
 
-import simulation.presets.EntitiesQuantityPreset;
 import simulation.entity.EntityType;
 import simulation.map.Location;
 import simulation.map.WorldMap;
+import simulation.config.EntityStartValues;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -11,11 +11,11 @@ import java.util.List;
 
 public class PopulateMapAction implements Action {
     private final ActionHelper actionHelper;
-    private final EntitiesQuantityPreset entitiesPreset;
+    private final EntityStartValues entityStartValues;
 
-    public PopulateMapAction(ActionHelper actionHelper, EntitiesQuantityPreset entitiesPreset) {
+    public PopulateMapAction(ActionHelper actionHelper, EntityStartValues entityStartValues) {
         this.actionHelper = actionHelper;
-        this.entitiesPreset = entitiesPreset;
+        this.entityStartValues = entityStartValues;
     }
 
     @Override
@@ -45,11 +45,11 @@ public class PopulateMapAction implements Action {
 
     private int getTypeQuantity(EntityType entityType) {
         return switch (entityType) {
-            case ROCK -> entitiesPreset.getStartStonesQuantity();
-            case GRASS -> entitiesPreset.getStartGrassQuantity();
-            case TREE -> entitiesPreset.getStartTreeQuantity();
-            case HERBIVORE -> entitiesPreset.getStartHerbivoresQuantity();
-            case PREDATOR -> entitiesPreset.getStartPredatorsQuantity();
+            case ROCK -> entityStartValues.startStonesQuantity();
+            case GRASS -> entityStartValues.startGrassQuantity();
+            case TREE -> entityStartValues.startTreeQuantity();
+            case HERBIVORE -> entityStartValues.startHerbivoresQuantity();
+            case PREDATOR -> entityStartValues.startPredatorsQuantity();
         };
     }
 }
